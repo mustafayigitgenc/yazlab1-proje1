@@ -17,6 +17,7 @@ namespace Gumusdere.World
     {
         private const float RiverSouth = 18f;
         private const float RiverNorth = 26f;
+        private const int IgnoreRaycastLayer = 2;
 
         private readonly WorldLayout layout = new();
         private Transform world;
@@ -37,6 +38,12 @@ namespace Gumusdere.World
             BuildLakeAndForest();
             BuildMineEntrance();
             BuildBorders();
+
+            // Görünmez oyuncu duvarları "Ignore Raycast" katmanında: Cemal'in sensörü onları engel sanmasın.
+            foreach (Transform t in layout.PlayerOnlyWalls.GetComponentsInChildren<Transform>(true))
+            {
+                t.gameObject.layer = IgnoreRaycastLayer;
+            }
 
             layout.PlayerSpawn = new Vector3(0f, 0.1f, -8f);
             layout.CompanionSpawn = new Vector3(2f, 0f, -10f);
@@ -146,13 +153,6 @@ namespace Gumusdere.World
             Shapes.Box("Kopru_Direk", zone, new Vector3(-2.4f, 1.5f, RiverNorth + 0.6f), new Vector3(0.4f, 3f, 0.4f), Palette.DarkWood);
             Shapes.Box("Kopru_Direk", zone, new Vector3(2.4f, 1.5f, RiverNorth + 0.6f), new Vector3(0.4f, 3f, 0.4f), Palette.DarkWood);
 
-            // Vinç: köprüyü indiren kol, karşı (kuzey) kıyıda.
-            var winchPos = new Vector3(6f, 0f, 29.5f);
-            Shapes.Box("Vinc_Govde", zone, winchPos + new Vector3(0f, 0.4f, 0f), new Vector3(1.2f, 0.8f, 1.2f), Palette.Stone);
-            Shapes.Cylinder("Vinc_Teker", zone, winchPos + new Vector3(0.7f, 0.9f, 0f), new Vector3(0.9f, 0.06f, 0.9f), Palette.DarkWood, false, Quaternion.Euler(0f, 0f, 90f));
-            Shapes.Cylinder("Vinc_Kol", zone, winchPos + new Vector3(0f, 1.25f, 0f), new Vector3(0.12f, 0.45f, 0.12f), Palette.Lever, false, Quaternion.Euler(0f, 0f, 25f));
-            layout.WinchInteractPoint = winchPos + new Vector3(0f, 0f, -1.3f);
-
             // Sadece oyuncuyu durduran kıyı duvarları (NavMesh bunları görmez).
             Transform walls = layout.PlayerOnlyWalls;
             Shapes.InvisibleBox("Kiyi_Guney_Bati", walls, new Vector3(-21f, 1f, RiverSouth - 0.25f), new Vector3(38f, 2f, 0.5f));
@@ -164,6 +164,19 @@ namespace Gumusdere.World
 
             layout.Bridge = hinge.gameObject.AddComponent<Drawbridge>();
             layout.Bridge.Initialize(new[] { southGate, northGate });
+
+            // Vinç: köprüyü indiren kol, karşı (kuzey) kıyıda. Cemal'in görev hedefi.
+            var winchRoot = new GameObject("Vinc").transform;
+            winchRoot.SetParent(zone, false);
+            winchRoot.localPosition = new Vector3(6f, 0f, 29.5f);
+            Shapes.Box("Vinc_Govde", winchRoot, new Vector3(0f, 0.4f, 0f), new Vector3(1.2f, 0.8f, 1.2f), Palette.Stone);
+            Shapes.Cylinder("Vinc_Teker", winchRoot, new Vector3(0.7f, 0.9f, 0f), new Vector3(0.9f, 0.06f, 0.9f), Palette.DarkWood, false, Quaternion.Euler(0f, 0f, 90f));
+            Transform lever = Shapes.Cylinder("Vinc_Kol", winchRoot, new Vector3(0f, 1.25f, 0f), new Vector3(0.12f, 0.45f, 0.12f), Palette.Lever, false, Quaternion.Euler(0f, 0f, 25f)).transform;
+
+            layout.Winch = winchRoot.gameObject.AddComponent<Gumusdere.Interaction.Winch>();
+            layout.Winch.Initialize(layout.Bridge, lever,
+                standPoint: winchRoot.position + new Vector3(0f, 0f, -1.3f),
+                bridgeSouthEnd: new Vector3(0f, 0f, RiverSouth - 1.5f));
         }
 
         // ------------------------------------------------------------------ Mera
