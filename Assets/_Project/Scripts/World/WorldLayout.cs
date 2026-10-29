@@ -41,6 +41,7 @@ namespace Gumusdere.World
         /// <summary>Oyuncunun E ile kullanabildiği her şey (tarlalar, çalılar, iskele...).</summary>
         public readonly List<Gumusdere.Interaction.IPlayerInteractable> PlayerInteractables = new();
         public Transform MineDoor;
+        public Gumusdere.World.MineDoor Door;
         public Vector3 GuardSpot;
     }
 }

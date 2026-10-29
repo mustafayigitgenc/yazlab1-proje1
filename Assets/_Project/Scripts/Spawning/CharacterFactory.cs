@@ -91,6 +91,31 @@ namespace Gumusdere.Spawning
             return companion;
         }
 
+        /// <summary>Maden bekçisi Hüsnü Dayı'nın görünümü (konuşma mantığı GuardNpc ve NpcDialogueController'da).</summary>
+        public static GameObject CreateGuardBody(Transform parent, Vector3 position)
+        {
+            var root = new GameObject("Husnu_Dayi");
+            root.transform.SetParent(parent, false);
+            root.transform.position = position;
+            root.transform.rotation = Quaternion.Euler(0f, 200f, 0f);
+
+            Transform t = root.transform;
+            Shapes.Capsule("Govde", t, new Vector3(0f, 0.7f, 0f), new Vector3(0.8f, 0.55f, 0.7f), Palette.Vest, false);
+            Shapes.Box("Pantolon", t, new Vector3(0f, 0.3f, 0f), new Vector3(0.6f, 0.6f, 0.5f), Palette.Trousers, false);
+            Shapes.Sphere("Kafa", t, new Vector3(0f, 1.5f, 0f), Vector3.one * 0.5f, Palette.Skin, false);
+            Shapes.Box("Burun", t, new Vector3(0f, 1.5f, 0.25f), new Vector3(0.1f, 0.1f, 0.1f), Palette.Skin, false);
+            Shapes.Sphere("Sakal", t, new Vector3(0f, 1.33f, 0.14f), new Vector3(0.42f, 0.32f, 0.3f), Palette.Beard, false);
+            Shapes.Cylinder("Kasket", t, new Vector3(0f, 1.74f, 0f), new Vector3(0.5f, 0.07f, 0.5f), Palette.DarkWood, false);
+            Shapes.Box("Kasket_Siper", t, new Vector3(0f, 1.7f, 0.24f), new Vector3(0.36f, 0.03f, 0.18f), Palette.DarkWood, false);
+            Shapes.Cylinder("Baston", t, new Vector3(0.45f, 0.55f, 0.15f), new Vector3(0.06f, 0.55f, 0.06f), Palette.Wood, false);
+
+            var body = root.AddComponent<CapsuleCollider>();
+            body.center = new Vector3(0f, 0.9f, 0f);
+            body.radius = 0.4f;
+            body.height = 1.8f;
+            return root;
+        }
+
         /// <summary>NavMesh hazır olduktan sonra çağrılmalıdır.</summary>
         public static AnimalWanderer CreateCow(Transform parent, Vector3 position, Rect pasture)
         {

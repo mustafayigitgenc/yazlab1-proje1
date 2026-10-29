@@ -266,6 +266,7 @@ namespace Gumusdere.World
             Shapes.Box("Kapi_Kusak", door.transform, new Vector3(0f, 0.25f, -0.6f), new Vector3(1.02f, 0.06f, 0.4f), Palette.DarkWood, false);
             Shapes.Box("Kapi_Kusak", door.transform, new Vector3(0f, -0.25f, -0.6f), new Vector3(1.02f, 0.06f, 0.4f), Palette.DarkWood, false);
             layout.MineDoor = door.transform;
+            layout.Door = door.AddComponent<MineDoor>();
 
             // Fener
             Shapes.Cylinder("Fener_Direk", zone, new Vector3(-3.2f, 1.1f, 70.8f), new Vector3(0.15f, 1.1f, 0.15f), Palette.DarkWood);

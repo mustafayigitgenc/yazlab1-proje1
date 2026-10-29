@@ -30,6 +30,8 @@ namespace Gumusdere.World
         public static readonly Color WorkerShirt = new(0.88f, 0.52f, 0.20f);
         public static readonly Color Trousers = new(0.25f, 0.25f, 0.32f);
         public static readonly Color Skin = new(0.96f, 0.80f, 0.65f);
+        public static readonly Color Beard = new(0.90f, 0.90f, 0.88f);
+        public static readonly Color Vest = new(0.42f, 0.30f, 0.22f);
         public static readonly Color Helmet = new(0.98f, 0.82f, 0.10f);
         public static readonly Color Cow = new(0.96f, 0.96f, 0.96f);
         public static readonly Color CowSpot = new(0.16f, 0.16f, 0.16f);

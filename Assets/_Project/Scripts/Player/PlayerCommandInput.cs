@@ -27,6 +27,11 @@ namespace Gumusdere.Player
             tasks.AddRange(companionTasks);
         }
 
+        private void OnDisable()
+        {
+            AvailableTask = null;
+        }
+
         private void Update()
         {
             AvailableTask = FindAvailableTask();
