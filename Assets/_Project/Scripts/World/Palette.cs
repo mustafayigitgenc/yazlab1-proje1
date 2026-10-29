@@ -11,6 +11,8 @@ namespace Gumusdere.World
         public static readonly Color GrassDark = new(0.34f, 0.58f, 0.27f);
         public static readonly Color Dirt = new(0.66f, 0.50f, 0.32f);
         public static readonly Color Soil = new(0.40f, 0.27f, 0.16f);
+        public static readonly Color SoilWet = new(0.27f, 0.18f, 0.11f);
+        public static readonly Color Pumpkin = new(0.95f, 0.55f, 0.12f);
         public static readonly Color Water = new(0.24f, 0.55f, 0.86f);
         public static readonly Color ShallowWater = new(0.50f, 0.76f, 0.88f);
         public static readonly Color Wood = new(0.58f, 0.38f, 0.21f);

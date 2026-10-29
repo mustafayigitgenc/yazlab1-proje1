@@ -36,6 +36,10 @@ namespace Gumusdere.World
         public readonly List<Vector3> BerryBushes = new();
 
         public Vector3 FishingSpot;
+        public Gumusdere.Fishing.FishingSpot Fishing;
+
+        /// <summary>Oyuncunun E ile kullanabildiği her şey (tarlalar, çalılar, iskele...).</summary>
+        public readonly List<Gumusdere.Interaction.IPlayerInteractable> PlayerInteractables = new();
         public Transform MineDoor;
         public Vector3 GuardSpot;
     }

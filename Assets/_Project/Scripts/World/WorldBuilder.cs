@@ -84,8 +84,12 @@ namespace Gumusdere.World
                 for (int j = 0; j < 3; j++)
                 {
                     var p = new Vector3(6f + i * 2f, 0.05f, -12f + j * 2f);
-                    Shapes.Box($"Tarla_{i}_{j}", zone, p, new Vector3(1.7f, 0.1f, 1.7f), Palette.Soil, false);
+                    GameObject tile = Shapes.Box($"Tarla_{i}_{j}", zone, p, new Vector3(1.7f, 0.1f, 1.7f), Palette.Soil, false);
                     layout.FarmTiles.Add(p);
+
+                    var plot = tile.AddComponent<Gumusdere.Farming.FarmPlot>();
+                    plot.Initialize(tile.GetComponent<Renderer>(), zone);
+                    layout.PlayerInteractables.Add(plot);
                 }
             }
 
@@ -210,11 +214,17 @@ namespace Gumusdere.World
             Shapes.Cylinder("Iskele_Ayak", zone, new Vector3(-13.6f, 0.1f, 47.3f), new Vector3(0.2f, 0.3f, 0.2f), Palette.DarkWood, false);
             Shapes.Cylinder("Iskele_Ayak", zone, new Vector3(-13.6f, 0.1f, 48.7f), new Vector3(0.2f, 0.3f, 0.2f), Palette.DarkWood, false);
             layout.FishingSpot = new Vector3(-13.2f, 0.2f, 48f);
+            var fishingRoot = new GameObject("Balik_Noktasi");
+            fishingRoot.transform.SetParent(zone, false);
+            fishingRoot.transform.position = layout.FishingSpot;
+            layout.Fishing = fishingRoot.AddComponent<Gumusdere.Fishing.FishingSpot>();
+            layout.Fishing.Initialize(new Vector3(-16.5f, 0.05f, 48f));
+            layout.PlayerInteractables.Add(layout.Fishing);
 
             // Meyve çalıları
-            Bush(zone, new Vector3(14f, 0f, 52f));
-            Bush(zone, new Vector3(18f, 0f, 57f));
-            Bush(zone, new Vector3(10f, 0f, 60f));
+            layout.PlayerInteractables.Add(Bush(zone, new Vector3(14f, 0f, 52f)));
+            layout.PlayerInteractables.Add(Bush(zone, new Vector3(18f, 0f, 57f)));
+            layout.PlayerInteractables.Add(Bush(zone, new Vector3(10f, 0f, 60f)));
 
             // Orman
             float[,] trees =
@@ -301,12 +311,19 @@ namespace Gumusdere.World
             Shapes.Sphere("Agac_Yaprak", parent, basePos + new Vector3(0.5f, 3.4f * size, 0.3f), new Vector3(1.5f, 1.4f, 1.5f) * size, leaves, false);
         }
 
-        private static void Bush(Transform parent, Vector3 basePos)
+        private static Gumusdere.Farming.BerryBush Bush(Transform parent, Vector3 basePos)
         {
-            Shapes.Sphere("Cali", parent, basePos + new Vector3(0f, 0.55f, 0f), new Vector3(1.4f, 1.1f, 1.4f), Palette.GrassDark);
-            Shapes.Sphere("Meyve", parent, basePos + new Vector3(0.45f, 0.8f, -0.4f), Vector3.one * 0.22f, Palette.Berry, false);
-            Shapes.Sphere("Meyve", parent, basePos + new Vector3(-0.35f, 0.95f, -0.45f), Vector3.one * 0.22f, Palette.Berry, false);
-            Shapes.Sphere("Meyve", parent, basePos + new Vector3(0.1f, 1.05f, -0.55f), Vector3.one * 0.22f, Palette.Berry, false);
+            GameObject bush = Shapes.Sphere("Cali", parent, basePos + new Vector3(0f, 0.55f, 0f), new Vector3(1.4f, 1.1f, 1.4f), Palette.GrassDark);
+            GameObject[] berries =
+            {
+                Shapes.Sphere("Meyve", parent, basePos + new Vector3(0.45f, 0.8f, -0.4f), Vector3.one * 0.22f, Palette.Berry, false),
+                Shapes.Sphere("Meyve", parent, basePos + new Vector3(-0.35f, 0.95f, -0.45f), Vector3.one * 0.22f, Palette.Berry, false),
+                Shapes.Sphere("Meyve", parent, basePos + new Vector3(0.1f, 1.05f, -0.55f), Vector3.one * 0.22f, Palette.Berry, false)
+            };
+
+            var berryBush = bush.AddComponent<Gumusdere.Farming.BerryBush>();
+            berryBush.Initialize(berries);
+            return berryBush;
         }
 
         private static void Fence(Transform parent, Vector3 from, Vector3 to)
