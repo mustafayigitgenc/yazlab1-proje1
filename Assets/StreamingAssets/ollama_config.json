@@ -1,0 +1,10 @@
+{
+    "baseUrl": "http://localhost:11434",
+    "model": "llama3.2:3b",
+    "timeoutSeconds": 45,
+    "healthTimeoutSeconds": 3,
+    "temperature": 0.8,
+    "maxTokens": 300,
+    "retryCount": 1,
+    "keepAlive": "15m"
+}

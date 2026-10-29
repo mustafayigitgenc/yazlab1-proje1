@@ -2,6 +2,11 @@ using Gumusdere.Companion;
 using Gumusdere.Interaction;
 using Gumusdere.Items;
 using Gumusdere.Navigation;
+using Gumusdere.Npc;
+using Gumusdere.Npc.Actions;
+using Gumusdere.Npc.Dialogue;
+using Gumusdere.Npc.Llm;
+using Gumusdere.Npc.Parsing;
 using Gumusdere.Player;
 using Gumusdere.Spawning;
 using Gumusdere.UI;
@@ -31,7 +36,7 @@ namespace Gumusdere.Core
         private void Awake()
         {
             // 0) Mesaj kutusu (sol alt)
-            IMessageLog log = gameObject.AddComponent<MessageLog>();
+            MessageLog log = gameObject.AddComponent<MessageLog>();
 
             // 1) Harita
             WorldLayout layout = new WorldBuilder().Build(transform);
@@ -79,18 +84,54 @@ namespace Gumusdere.Core
             // 7) Çanta ve E ile etkileşim (tarla, çalı, iskele)
             IInventory inventory = new Inventory();
             var interactor = player.gameObject.AddComponent<PlayerInteractor>();
-            var context = new PlayerContext(player.gameObject, inventory, log, controlsOn =>
+            System.Action<bool> setControls = controlsOn =>
             {
                 player.InputEnabled = controlsOn;
                 interactor.InteractionEnabled = controlsOn;
-            });
+                commands.enabled = controlsOn;
+            };
+            var context = new PlayerContext(player.gameObject, inventory, log, setControls);
             interactor.Initialize(context, layout.PlayerInteractables);
 
+            // 8) Hüsnü Dayı: yerel LLM (Ollama) ile konuşan NPC
+            NpcDialogueController dialogue = SetUpGuard(layout, characters, player.transform, inventory, setControls, interactor);
+            layout.Door.Opened += () =>
+            {
+                log.Add("", "Maden kapısı açıldı! Hüsnü Dayı anahtarı verdi.", Color.white);
+                navMesh.RebuildAsync();
+            };
+
+            // 9) Arayüz
             gameObject.AddComponent<HelpOverlay>().Initialize(cemal, commands, interactor, layout.Bridge);
             gameObject.AddComponent<InventoryView>().Initialize(inventory);
             gameObject.AddComponent<FishingView>().Initialize(layout.Fishing);
+            gameObject.AddComponent<DialogueView>().Initialize(dialogue, log);
+            gameObject.AddComponent<LlmStatusIndicator>().Initialize(dialogue);
 
             log.Add("", "Gümüşdere'ye hoş geldin ağa! Köprü kalkık; köprü başına gidip F ile Cemal'e iş ver.", Color.white);
+        }
+
+        private NpcDialogueController SetUpGuard(WorldLayout layout, Transform parent, Transform player,
+            IInventory inventory, System.Action<bool> setControls, PlayerInteractor interactor)
+        {
+            GameObject body = CharacterFactory.CreateGuardBody(parent, layout.GuardSpot);
+            navMesh.Ignore(body.transform);
+
+            var speech = body.AddComponent<SpeechBubble>();
+            NpcPersona persona = NpcPersona.HusnuDayi();
+            speech.Initialize(persona.Name, Palette.Vest, null);
+
+            var dialogue = body.AddComponent<NpcDialogueController>();
+            ILLMClient client = new OllamaClient(OllamaConfig.LoadOrDefault());
+            dialogue.Initialize(client, new NpcResponseParser(), persona, inventory, speech, setControls);
+
+            var guard = body.AddComponent<GuardNpc>();
+            guard.Initialize(dialogue, player);
+            interactor.Register(guard);
+
+            dialogue.RegisterAction(NpcAction.OpenMine, new OpenMineAction(layout.Door, persona.OpenThreshold));
+            dialogue.RegisterAction(NpcAction.KickOut, new KickOutAction(guard, persona.KickThreshold));
+            return dialogue;
         }
 
         private static Camera SetUpCamera(Transform target)

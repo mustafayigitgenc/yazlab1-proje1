@@ -34,6 +34,9 @@ namespace Gumusdere.UI
         private GUIStyle lineStyle;
         private GUIStyle panelStyle;
 
+        /// <summary>Diyalog penceresi açıkken gizlenir.</summary>
+        public bool Visible { get; set; } = true;
+
         public void Add(string speaker, string text, Color color)
         {
             entries.Add(new Entry(speaker, text, color, Time.time));
@@ -42,7 +45,7 @@ namespace Gumusdere.UI
 
         private void OnGUI()
         {
-            if (entries.Count == 0) return;
+            if (entries.Count == 0 || !Visible) return;
             EnsureStyles();
 
             float scale = Mathf.Max(1f, Screen.height / 900f);
