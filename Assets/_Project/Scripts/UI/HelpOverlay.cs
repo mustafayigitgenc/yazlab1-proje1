@@ -15,15 +15,18 @@ namespace Gumusdere.UI
     {
         private CompanionController companion;
         private PlayerCommandInput commands;
+        private PlayerInteractor interactor;
         private Drawbridge bridge;
         private GUIStyle panelStyle;
         private GUIStyle textStyle;
         private GUIStyle promptStyle;
 
-        public void Initialize(CompanionController targetCompanion, PlayerCommandInput playerCommands, Drawbridge targetBridge)
+        public void Initialize(CompanionController targetCompanion, PlayerCommandInput playerCommands,
+            PlayerInteractor playerInteractor, Drawbridge targetBridge)
         {
             companion = targetCompanion;
             commands = playerCommands;
+            interactor = playerInteractor;
             bridge = targetBridge;
         }
 
@@ -42,10 +45,11 @@ namespace Gumusdere.UI
 
         private void DrawHelpPanel()
         {
-            float panelHeight = DebugView.Enabled ? 250f : 100f;
+            float panelHeight = DebugView.Enabled ? 275f : 125f;
             GUILayout.BeginArea(new Rect(12f, 12f, 450f, panelHeight), panelStyle);
             GUILayout.Label("<b>Gümüşdere</b>", textStyle);
             GUILayout.Label("WASD / oklar: yürü    Shift: koş", textStyle);
+            GUILayout.Label("E: kullan (tarla, çalı, iskele)    Boşluk: oltayı çek", textStyle);
             GUILayout.Label("F: Cemal'e görev ver    G: bekle / takip / geri çağır    F1: debug", textStyle);
 
             if (DebugView.Enabled && companion != null && companion.Agent != null)
@@ -72,11 +76,18 @@ namespace Gumusdere.UI
 
         private void DrawPrompt(float width, float height)
         {
-            if (commands == null || commands.AvailableTask == null) return;
+            float y = height - 90f;
 
-            string text = $"[F]  {commands.AvailableTask.CommandText}";
-            var rect = new Rect(width * 0.5f - 200f, height - 90f, 400f, 44f);
-            GUI.Box(rect, text, promptStyle);
+            if (commands != null && commands.AvailableTask != null)
+            {
+                GUI.Box(new Rect(width * 0.5f - 200f, y, 400f, 40f), $"[F]  {commands.AvailableTask.CommandText}", promptStyle);
+                y -= 48f;
+            }
+
+            if (interactor != null && !string.IsNullOrEmpty(interactor.CurrentPrompt))
+            {
+                GUI.Box(new Rect(width * 0.5f - 200f, y, 400f, 40f), $"[E]  {interactor.CurrentPrompt}", promptStyle);
+            }
         }
 
         private void EnsureStyles()

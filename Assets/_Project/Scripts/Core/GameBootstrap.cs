@@ -1,5 +1,6 @@
 using Gumusdere.Companion;
 using Gumusdere.Interaction;
+using Gumusdere.Items;
 using Gumusdere.Navigation;
 using Gumusdere.Player;
 using Gumusdere.Spawning;
@@ -74,7 +75,20 @@ namespace Gumusdere.Core
 
             var commands = player.gameObject.AddComponent<PlayerCommandInput>();
             commands.Initialize(cemal, new IInteractable[] { layout.Winch });
-            gameObject.AddComponent<HelpOverlay>().Initialize(cemal, commands, layout.Bridge);
+
+            // 7) Çanta ve E ile etkileşim (tarla, çalı, iskele)
+            IInventory inventory = new Inventory();
+            var interactor = player.gameObject.AddComponent<PlayerInteractor>();
+            var context = new PlayerContext(player.gameObject, inventory, log, controlsOn =>
+            {
+                player.InputEnabled = controlsOn;
+                interactor.InteractionEnabled = controlsOn;
+            });
+            interactor.Initialize(context, layout.PlayerInteractables);
+
+            gameObject.AddComponent<HelpOverlay>().Initialize(cemal, commands, interactor, layout.Bridge);
+            gameObject.AddComponent<InventoryView>().Initialize(inventory);
+            gameObject.AddComponent<FishingView>().Initialize(layout.Fishing);
 
             log.Add("", "Gümüşdere'ye hoş geldin ağa! Köprü kalkık; köprü başına gidip F ile Cemal'e iş ver.", Color.white);
         }
