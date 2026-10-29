@@ -1,5 +1,8 @@
 using Gumusdere.Companion;
+using Gumusdere.Companion.Sensing;
+using Gumusdere.Core;
 using Gumusdere.Player;
+using Gumusdere.UI;
 using Gumusdere.Village;
 using Gumusdere.World;
 using UnityEngine;
@@ -45,7 +48,7 @@ namespace Gumusdere.Spawning
         }
 
         /// <summary>NavMesh hazır olduktan sonra çağrılmalıdır.</summary>
-        public static CompanionController CreateCompanion(Transform parent, Vector3 position, Transform leader)
+        public static CompanionController CreateCompanion(Transform parent, Vector3 position, Transform leader, IMessageLog log)
         {
             var root = new GameObject(CompanionController.DisplayName);
             root.transform.SetParent(parent, false);
@@ -74,8 +77,14 @@ namespace Gumusdere.Spawning
                 agent.Warp(hit.position);
             }
 
+            // Sensör (ışınlar), sensör çizimi ve konuşma balonu
+            var sensor = root.AddComponent<RaycastSensor>();
+            root.AddComponent<SensorDebugView>().Initialize(sensor);
+            var speech = root.AddComponent<SpeechBubble>();
+            speech.Initialize(CompanionController.DisplayName, Palette.WorkerShirt, log);
+
             var companion = root.AddComponent<CompanionController>();
-            companion.Initialize(leader);
+            companion.Initialize(leader, sensor, speech);
 
             var pathView = root.AddComponent<CompanionPathView>();
             pathView.Initialize(agent);
@@ -106,6 +115,11 @@ namespace Gumusdere.Spawning
                     Shapes.Box("Bacak", t, new Vector3(lx, 0.22f, lz), new Vector3(0.18f, 0.45f, 0.18f), Palette.Cow, false);
                 }
             }
+
+            // Cemal'in sensörünün inekleri görebilmesi için çarpışma kutusu (NavMesh hesabında yok sayılır).
+            var body = root.AddComponent<BoxCollider>();
+            body.center = new Vector3(0f, 0.85f, 0.15f);
+            body.size = new Vector3(0.9f, 1.1f, 1.9f);
 
             var agent = root.AddComponent<NavMeshAgent>();
             agent.radius = 0.7f;

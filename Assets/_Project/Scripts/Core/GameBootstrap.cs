@@ -1,4 +1,5 @@
 using Gumusdere.Companion;
+using Gumusdere.Interaction;
 using Gumusdere.Navigation;
 using Gumusdere.Player;
 using Gumusdere.Spawning;
@@ -28,6 +29,9 @@ namespace Gumusdere.Core
 
         private void Awake()
         {
+            // 0) Mesaj kutusu (sol alt)
+            IMessageLog log = gameObject.AddComponent<MessageLog>();
+
             // 1) Harita
             WorldLayout layout = new WorldBuilder().Build(transform);
 
@@ -47,28 +51,35 @@ namespace Gumusdere.Core
             navMesh.Build();
 
             // 4) NavMesh'e ihtiyaç duyan ajanlar
-            CompanionController cemal = CharacterFactory.CreateCompanion(characters, layout.CompanionSpawn, player.transform);
+            CompanionController cemal = CharacterFactory.CreateCompanion(characters, layout.CompanionSpawn, player.transform, log);
             for (int i = 0; i < CowCount; i++)
             {
                 Rect p = layout.CowPasture;
                 var spawn = new Vector3(p.xMin + p.width * (0.2f + 0.3f * i), 0f, p.yMin + p.height * (0.3f + 0.2f * i));
-                CharacterFactory.CreateCow(characters, spawn, p);
+                var cow = CharacterFactory.CreateCow(characters, spawn, p);
+                navMesh.Ignore(cow.transform); // hareketli olduğu için NavMesh'e "duvar" olarak girmesin
             }
 
             // 5) Köprü inince NavMesh'i oyunu dondurmadan yeniden hesapla
             layout.Bridge.Lowered += () =>
             {
                 Debug.Log("[Köprü] İndi, NavMesh güncelleniyor...");
+                log.Add("", "Köprü indi. Artık nehrin karşısına geçebilirsin.", Color.white);
                 navMesh.RebuildAsync();
             };
 
-            // 6) Kamera, girdiler ve arayüz
-            SetUpCamera(player.transform);
-            player.gameObject.AddComponent<PlayerCommandInput>().Initialize(cemal, layout.Bridge);
-            gameObject.AddComponent<HelpOverlay>().Initialize(cemal, layout.Bridge);
+            // 6) Kamera, ışık, girdiler ve arayüz
+            Camera cam = SetUpCamera(player.transform);
+            EnvironmentSetup.Apply(cam);
+
+            var commands = player.gameObject.AddComponent<PlayerCommandInput>();
+            commands.Initialize(cemal, new IInteractable[] { layout.Winch });
+            gameObject.AddComponent<HelpOverlay>().Initialize(cemal, commands, layout.Bridge);
+
+            log.Add("", "Gümüşdere'ye hoş geldin ağa! Köprü kalkık; köprü başına gidip F ile Cemal'e iş ver.", Color.white);
         }
 
-        private static void SetUpCamera(Transform target)
+        private static Camera SetUpCamera(Transform target)
         {
             Camera cam = Camera.main;
             if (cam == null)
@@ -81,6 +92,7 @@ namespace Gumusdere.Core
             CameraFollow follow = cam.GetComponent<CameraFollow>();
             if (follow == null) follow = cam.gameObject.AddComponent<CameraFollow>();
             follow.Initialize(target);
+            return cam;
         }
 
         private void OnDestroy()

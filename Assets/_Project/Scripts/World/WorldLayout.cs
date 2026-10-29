@@ -26,8 +26,8 @@ namespace Gumusdere.World
 
         public Drawbridge Bridge;
 
-        /// <summary>Köprü vincinin önündeki etkileşim noktası.</summary>
-        public Vector3 WinchInteractPoint;
+        /// <summary>Köprüyü indiren vinç (Cemal'in görev hedefi).</summary>
+        public Gumusdere.Interaction.Winch Winch;
 
         /// <summary>İneklerin dolaştığı mera (x/z düzleminde).</summary>
         public Rect CowPasture;
