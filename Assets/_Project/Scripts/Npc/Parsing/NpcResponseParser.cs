@@ -16,7 +16,8 @@ namespace Gumusdere.Npc.Parsing
     public sealed class NpcResponseParser : IResponseParser<NpcDecision>
     {
         public const int MaxTrustChange = 20;
-        public const int MaxReplyLength = 400;
+        public const int MaxReplyLength = 240;
+        public const int MaxReplySentences = 3;
 
         private const int MissingNumber = int.MinValue;
 
@@ -27,7 +28,7 @@ namespace Gumusdere.Npc.Parsing
             "\"emotion\":{\"type\":\"string\",\"enum\":[\"neutral\",\"friendly\",\"suspicious\",\"angry\",\"sad\"]}," +
             "\"trust_change\":{\"type\":\"integer\",\"minimum\":-20,\"maximum\":20}," +
             "\"accepted_gift\":{\"type\":\"string\",\"enum\":[\"none\",\"alabalik\",\"balkabagi\",\"bogurtlen\"]}," +
-            "\"action\":{\"type\":\"string\",\"enum\":[\"none\",\"open_mine\",\"kick_out\"]}" +
+            "\"action\":{\"type\":\"string\",\"enum\":[\"none\",\"open_mine\",\"close_mine\",\"kick_out\"]}" +
             "},\"required\":[\"reply\",\"emotion\",\"trust_change\",\"accepted_gift\",\"action\"]}";
 
         [Serializable]
@@ -76,11 +77,18 @@ namespace Gumusdere.Npc.Parsing
                 return false;
             }
 
-            var warnings = new List<string>();
-            if (reply.Length > MaxReplyLength)
+            if (LooksLikeNonSpeech(reply))
             {
-                reply = reply.Substring(0, MaxReplyLength).TrimEnd() + "...";
-                warnings.Add("reply kısaltıldı");
+                error = $"\"reply\" konuşma metni değil: '{reply}'";
+                return false;
+            }
+
+            var warnings = new List<string>();
+            string shortened = Shorten(reply, MaxReplySentences, MaxReplyLength);
+            if (shortened != reply)
+            {
+                warnings.Add($"reply kısaltıldı ({reply.Length} → {shortened.Length} karakter)");
+                reply = shortened;
             }
 
             int trust;
@@ -101,6 +109,48 @@ namespace Gumusdere.Npc.Parsing
 
             result = new NpcDecision(reply, emotion, trust, gift, action, json, warnings);
             return true;
+        }
+
+        /// <summary>
+        /// Cevabı cümle sınırından keser: en fazla maxSentences cümle ve maxLength karakter.
+        /// Tek cümle bile çok uzunsa son boşluktan kesip "..." ekler.
+        /// </summary>
+        public static string Shorten(string text, int maxSentences, int maxLength)
+        {
+            int sentences = 0;
+            int cut = -1;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if (c != '.' && c != '!' && c != '?') continue;
+                if (i + 1 < text.Length && (text[i + 1] == '.' || text[i + 1] == '!' || text[i + 1] == '?')) continue;
+                if (i + 1 > maxLength) break;
+
+                sentences++;
+                cut = i + 1;
+                if (sentences >= maxSentences) break;
+            }
+
+            if (cut > 0 && (sentences >= maxSentences || text.Length > maxLength)) return text.Substring(0, cut).Trim();
+            if (text.Length <= maxLength) return text;
+
+            int space = text.LastIndexOf(' ', maxLength - 3);
+            return text.Substring(0, space > 0 ? space : maxLength - 3).TrimEnd(',', ' ') + "...";
+        }
+
+        /// <summary>
+        /// Model bazen söz yerine eylem adını ("kick out", "open_mine") ya da alan adını yazar.
+        /// Böyle bir cevap NPC sözü olarak gösterilmez; ayrıştırma başarısız sayılır ve onarım istenir.
+        /// </summary>
+        public static bool LooksLikeNonSpeech(string reply)
+        {
+            string r = Normalize(reply).Replace('_', ' ').Trim(' ', '.', '!', '?', '"');
+            string[] forbidden = { "kick out", "open mine", "close mine", "none", "action", "reply", "neutral", "friendly", "suspicious", "angry", "sad" };
+            foreach (string word in forbidden)
+            {
+                if (r == word) return true;
+            }
+            return r.Length < 2;
         }
 
         /// <summary>Metindeki ilk dengeli { ... } bloğunu döndürür (tırnak içindeki parantezleri sayma).</summary>
@@ -160,6 +210,7 @@ namespace Gumusdere.Npc.Parsing
             {
                 case "none": return NpcAction.None;
                 case "open_mine": return NpcAction.OpenMine;
+                case "close_mine": return NpcAction.CloseMine;
                 case "kick_out": return NpcAction.KickOut;
                 default:
                     warnings.Add($"action '{value}' tanınmadı → none");

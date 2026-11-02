@@ -11,7 +11,7 @@ namespace Gumusdere.Npc.Dialogue
         private readonly List<ChatMessage> messages = new();
         private readonly int maxMessages;
 
-        public ConversationHistory(int maxTurns = 6)
+        public ConversationHistory(int maxTurns = 5)
         {
             maxMessages = maxTurns * 2;
         }

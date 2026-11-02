@@ -8,6 +8,7 @@ namespace Gumusdere.Npc.Parsing
     {
         None,
         OpenMine,
+        CloseMine,
         KickOut
     }
 

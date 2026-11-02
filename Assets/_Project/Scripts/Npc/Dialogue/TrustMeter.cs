@@ -25,6 +25,13 @@ namespace Gumusdere.Npc.Dialogue
             if (Value != previous) Changed?.Invoke(previous, Value);
         }
 
+        public void Reset(int value)
+        {
+            int previous = Value;
+            Value = Clamp(value);
+            if (Value != previous) Changed?.Invoke(previous, Value);
+        }
+
         private static int Clamp(int v) => v < Min ? Min : v > Max ? Max : v;
     }
 }
