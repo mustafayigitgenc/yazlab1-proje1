@@ -67,6 +67,7 @@ namespace Gumusdere.Fishing
 
             if (kb.escapeKey.wasPressedThisFrame)
             {
+                Gumusdere.Core.InputGate.ConsumeEscape();
                 Finish(false, "Oltayı topladın.");
             }
             else if (kb.spaceKey.wasPressedThisFrame)

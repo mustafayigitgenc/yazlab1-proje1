@@ -43,5 +43,10 @@ namespace Gumusdere.World
         public Transform MineDoor;
         public Gumusdere.World.MineDoor Door;
         public Vector3 GuardSpot;
+
+        /// <summary>Bu z değerinden sonrası maden (tünel ve mağara); kamera dikleşir.</summary>
+        public float MineStartZ;
+        public Gumusdere.Mining.RubblePile Rubble;
+        public Gumusdere.Mining.SilverVein Vein;
     }
 }

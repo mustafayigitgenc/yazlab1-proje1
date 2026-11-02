@@ -36,6 +36,9 @@ namespace Gumusdere.World
         public static readonly Color Cow = new(0.96f, 0.96f, 0.96f);
         public static readonly Color CowSpot = new(0.16f, 0.16f, 0.16f);
         public static readonly Color Lever = new(0.82f, 0.16f, 0.16f);
+        public static readonly Color CaveFloor = new(0.30f, 0.28f, 0.27f);
+        public static readonly Color CaveWall = new(0.36f, 0.34f, 0.35f);
+        public static readonly Color Silver = new(0.86f, 0.89f, 0.95f);
         public static readonly Color Darkness = new(0.05f, 0.05f, 0.06f);
         public static readonly Color DebugPath = new(1.00f, 0.90f, 0.15f);
     }

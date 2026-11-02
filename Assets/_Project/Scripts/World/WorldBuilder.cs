@@ -27,7 +27,7 @@ namespace Gumusdere.World
             world = new GameObject("World").transform;
             world.SetParent(parent, false);
 
-            layout.NavBounds = new Bounds(new Vector3(0f, 0f, 27f), new Vector3(90f, 16f, 120f));
+            layout.NavBounds = new Bounds(new Vector3(0f, 0f, 37f), new Vector3(90f, 16f, 140f));
             layout.PlayerOnlyWalls = Zone("PlayerOnlyWalls");
 
             BuildGround();
@@ -37,6 +37,7 @@ namespace Gumusdere.World
             BuildMeadow();
             BuildLakeAndForest();
             BuildMineEntrance();
+            BuildMineInterior();
             BuildBorders();
 
             // Görünmez oyuncu duvarları "Ignore Raycast" katmanında: Cemal'in sensörü onları engel sanmasın.
@@ -250,13 +251,11 @@ namespace Gumusdere.World
             Shapes.Box("Dag_Dogu", zone, new Vector3(22f, 4f, 76f), new Vector3(36f, 8f, 8f), Palette.Rock);
             Shapes.Box("Dag_Sol", zone, new Vector3(-3f, 2f, 76f), new Vector3(2f, 4f, 8f), Palette.Rock);
             Shapes.Box("Dag_Sag", zone, new Vector3(3f, 2f, 76f), new Vector3(2f, 4f, 8f), Palette.Rock);
-            Shapes.Box("Dag_Ust", zone, new Vector3(0f, 6f, 76f), new Vector3(8f, 4f, 8f), Palette.Rock);
             Shapes.Sphere("Kaya", zone, new Vector3(-12f, 8f, 75f), new Vector3(9f, 5f, 7f), Palette.Stone, false);
             Shapes.Sphere("Kaya", zone, new Vector3(14f, 8.5f, 76f), new Vector3(11f, 6f, 7f), Palette.Stone, false);
-            Shapes.Sphere("Kaya", zone, new Vector3(0f, 8.2f, 76f), new Vector3(7f, 4f, 6f), Palette.Rock, false);
 
-            // Tünelin karanlığı
-            Shapes.Box("Tunel_Karanlik", zone, new Vector3(0f, 1.9f, 76.2f), new Vector3(3.9f, 3.8f, 6.6f), Palette.Darkness, false);
+            // Tünelin zemini (üstü açık bir yarık; yukarıdan bakan kamera içeriyi görebilsin)
+            Shapes.Box("Tunel_Zemin", zone, new Vector3(0f, 0.01f, 76f), new Vector3(4f, 0.02f, 8f), Palette.CaveFloor, false);
 
             // Kapı çerçevesi ve kilitli kapı
             Shapes.Box("Kapi_Direk", zone, new Vector3(-1.85f, 1.75f, 72.1f), new Vector3(0.4f, 3.5f, 0.5f), Palette.DarkWood);
@@ -282,6 +281,84 @@ namespace Gumusdere.World
             layout.GuardSpot = new Vector3(3.5f, 0f, 69.5f);
         }
 
+        // ------------------------------------------------------------------ Maden içi (final)
+
+        /// <summary>
+        /// Tünelin arkasındaki mağara (z 80..104). Ortadaki duvarın geçidini göçük taşları kapatır;
+        /// Cemal temizleyince iç odadaki gümüş damarına ulaşılır.
+        /// </summary>
+        private void BuildMineInterior()
+        {
+            Transform zone = Zone("Maden_Ici");
+            layout.MineStartZ = 71f;
+
+            Shapes.Box("Magara_Zemin", zone, new Vector3(0f, -0.5f, 92f), new Vector3(24f, 1f, 24f), Palette.CaveFloor);
+
+            // Dış duvarlar (girişte x=-2..2 arası boşluk)
+            Shapes.Box("Magara_Duvar_Bati", zone, new Vector3(-12.5f, 2f, 92f), new Vector3(1f, 4f, 24f), Palette.CaveWall);
+            Shapes.Box("Magara_Duvar_Dogu", zone, new Vector3(12.5f, 2f, 92f), new Vector3(1f, 4f, 24f), Palette.CaveWall);
+            Shapes.Box("Magara_Duvar_Kuzey", zone, new Vector3(0f, 2f, 104.5f), new Vector3(26f, 4f, 1f), Palette.CaveWall);
+            Shapes.Box("Magara_Duvar_Guney", zone, new Vector3(-7.5f, 2f, 80.5f), new Vector3(11f, 4f, 1f), Palette.CaveWall);
+            Shapes.Box("Magara_Duvar_Guney", zone, new Vector3(7.5f, 2f, 80.5f), new Vector3(11f, 4f, 1f), Palette.CaveWall);
+
+            // İç oda ile dış oda arasındaki duvar; ortada 3 m'lik geçit
+            Shapes.Box("Ara_Duvar", zone, new Vector3(-7f, 2f, 95f), new Vector3(11f, 4f, 1f), Palette.CaveWall);
+            Shapes.Box("Ara_Duvar", zone, new Vector3(7f, 2f, 95f), new Vector3(11f, 4f, 1f), Palette.CaveWall);
+
+            // Eski maden araçları (süs)
+            Shapes.Box("Vagon", zone, new Vector3(-8f, 0.5f, 86f), new Vector3(1.4f, 1f, 2.2f), Palette.DarkWood);
+            Shapes.Box("Ray", zone, new Vector3(-8f, 0.02f, 88f), new Vector3(1.2f, 0.04f, 8f), Palette.Rock, false);
+            Shapes.Box("Destek_Kirisi", zone, new Vector3(-2.5f, 1.8f, 82f), new Vector3(0.3f, 3.6f, 0.3f), Palette.Wood);
+            Shapes.Box("Destek_Kirisi", zone, new Vector3(2.5f, 1.8f, 82f), new Vector3(0.3f, 3.6f, 0.3f), Palette.Wood);
+            Shapes.Sphere("Kaya_Yigini", zone, new Vector3(8f, 0.5f, 90f), new Vector3(2.2f, 1.2f, 1.8f), Palette.Rock);
+
+            // Göçük: geçidi tıkayan taş yığını (tek bir çarpışma kutusu + görsel taşlar)
+            var rubbleRoot = new GameObject("Gocuk_Taslari").transform;
+            rubbleRoot.SetParent(zone, false);
+            rubbleRoot.localPosition = new Vector3(0f, 0f, 95f);
+            var rubbleBody = rubbleRoot.gameObject.AddComponent<BoxCollider>();
+            rubbleBody.center = new Vector3(0f, 1f, 0f);
+            rubbleBody.size = new Vector3(3.2f, 2f, 1.6f);
+            Shapes.Sphere("Tas", rubbleRoot, new Vector3(-0.8f, 0.5f, 0f), new Vector3(1.3f, 1f, 1.2f), Palette.Stone, false);
+            Shapes.Sphere("Tas", rubbleRoot, new Vector3(0.7f, 0.55f, 0.1f), new Vector3(1.4f, 1.1f, 1.2f), Palette.Rock, false);
+            Shapes.Sphere("Tas", rubbleRoot, new Vector3(0f, 1.3f, 0f), new Vector3(1.2f, 0.9f, 1.1f), Palette.Stone, false);
+            layout.Rubble = rubbleRoot.gameObject.AddComponent<Gumusdere.Mining.RubblePile>();
+            layout.Rubble.Initialize(new Vector3(0f, 0f, 93.3f));
+
+            // Gümüş damarı: iç odanın dibinde, kaya kabuğunun içinde
+            var veinRoot = new GameObject("Gumus_Damari").transform;
+            veinRoot.SetParent(zone, false);
+            veinRoot.localPosition = new Vector3(0f, 0f, 101.5f);
+            Transform shell = Shapes.Sphere("Kaya_Kabuk", veinRoot, new Vector3(0f, 0.9f, 0f), new Vector3(2.2f, 1.8f, 1.6f), Palette.Rock).transform;
+            Shapes.Sphere("Parilti", shell, new Vector3(0.3f, 0.2f, -0.45f), Vector3.one * 0.15f, Palette.Silver, false);
+            Shapes.Sphere("Parilti", shell, new Vector3(-0.25f, -0.1f, -0.47f), Vector3.one * 0.12f, Palette.Silver, false);
+            var treasure = new GameObject("Gumus");
+            treasure.transform.SetParent(veinRoot, false);
+            Shapes.Sphere("Gumus_Kulce", treasure.transform, new Vector3(0f, 0.6f, 0f), new Vector3(1.6f, 1.1f, 1.2f), Palette.Silver, false);
+            Shapes.Sphere("Gumus_Kulce", treasure.transform, new Vector3(0.7f, 0.35f, 0.3f), new Vector3(0.7f, 0.6f, 0.6f), Palette.Silver, false);
+            Shapes.Sphere("Gumus_Kulce", treasure.transform, new Vector3(-0.6f, 0.3f, -0.2f), new Vector3(0.6f, 0.5f, 0.5f), Palette.Silver, false);
+            layout.Vein = veinRoot.gameObject.AddComponent<Gumusdere.Mining.SilverVein>();
+            layout.Vein.Initialize(shell, treasure);
+            layout.PlayerInteractables.Add(layout.Vein);
+
+            // Fenerler
+            AddLantern(zone, new Vector3(-10f, 3f, 84f), new Color(1f, 0.75f, 0.45f), 9f);
+            AddLantern(zone, new Vector3(10f, 3f, 84f), new Color(1f, 0.75f, 0.45f), 9f);
+            AddLantern(zone, new Vector3(-9f, 3f, 92f), new Color(1f, 0.75f, 0.45f), 8f);
+            AddLantern(zone, new Vector3(0f, 2.5f, 100f), new Color(0.75f, 0.85f, 1f), 7f);
+        }
+
+        private static void AddLantern(Transform parent, Vector3 position, Color color, float range)
+        {
+            var light = new GameObject("Maden_Feneri").AddComponent<Light>();
+            light.transform.SetParent(parent, false);
+            light.transform.localPosition = position;
+            light.type = LightType.Point;
+            light.color = color;
+            light.range = range;
+            light.intensity = 2.2f;
+        }
+
         // ------------------------------------------------------------------ Sınırlar
 
         private void BuildBorders()
@@ -290,7 +367,9 @@ namespace Gumusdere.World
             Shapes.InvisibleBox("Sinir_Bati", walls, new Vector3(-40.25f, 1.5f, 27f), new Vector3(0.5f, 3f, 110f));
             Shapes.InvisibleBox("Sinir_Dogu", walls, new Vector3(40.25f, 1.5f, 27f), new Vector3(0.5f, 3f, 110f));
             Shapes.InvisibleBox("Sinir_Guney", walls, new Vector3(0f, 1.5f, -26.25f), new Vector3(81f, 3f, 0.5f));
-            Shapes.InvisibleBox("Sinir_Kuzey", walls, new Vector3(0f, 1.5f, 80.25f), new Vector3(81f, 3f, 0.5f));
+            Shapes.InvisibleBox("Sinir_Kuzey_Bati", walls, new Vector3(-21.25f, 1.5f, 104.75f), new Vector3(38.5f, 3f, 0.5f));
+            Shapes.InvisibleBox("Sinir_Kuzey_Dogu", walls, new Vector3(21.25f, 1.5f, 104.75f), new Vector3(38.5f, 3f, 0.5f));
+            Shapes.InvisibleBox("Sinir_Maden", walls, new Vector3(0f, 1.5f, 104.75f), new Vector3(4f, 3f, 0.5f));
         }
 
         // ------------------------------------------------------------------ Yardımcılar
