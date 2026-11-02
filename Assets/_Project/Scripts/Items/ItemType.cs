@@ -1,3 +1,4 @@
+using System.Globalization;
 using UnityEngine;
 
 namespace Gumusdere.Items
@@ -28,6 +29,28 @@ namespace Gumusdere.Items
             ItemType.Trout => new Color(0.55f, 0.7f, 0.85f),
             _ => Color.white
         };
+
+        private static readonly CultureInfo Turkish = new("tr-TR");
+
+        /// <summary>Eşyanın oyuncunun cümlesinde geçip geçmediği (Türkçe büyük/küçük harf kurallarıyla).</summary>
+        public static bool IsMentionedIn(ItemType type, string text)
+        {
+            if (string.IsNullOrEmpty(text)) return false;
+            string t = text.ToLower(Turkish);
+            string[] words = type switch
+            {
+                ItemType.Pumpkin => new[] { "balkabağ", "balkabag", "kabak" },
+                ItemType.Berry => new[] { "böğürtlen", "bogurtlen", "meyve" },
+                ItemType.Trout => new[] { "alabalık", "alabalik", "balık", "balik" },
+                _ => new string[0]
+            };
+
+            foreach (string w in words)
+            {
+                if (t.Contains(w)) return true;
+            }
+            return false;
+        }
 
         /// <summary>LLM promptunda kullanılan Türkçe karaktersiz anahtar (örn. "alabalik").</summary>
         public static string Key(ItemType type) => type switch

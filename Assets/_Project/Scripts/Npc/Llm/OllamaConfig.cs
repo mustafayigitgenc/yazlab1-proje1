@@ -15,10 +15,10 @@ namespace Gumusdere.Npc.Llm
         public const string FileName = "ollama_config.json";
 
         public string baseUrl = "http://localhost:11434";
-        public string model = "llama3.2:3b";
+        public string model = "gemma3:4b";
         public int timeoutSeconds = 45;
         public int healthTimeoutSeconds = 3;
-        public float temperature = 0.8f;
+        public float temperature = 0.5f;
         public int maxTokens = 300;
         public int retryCount = 1;
         public string keepAlive = "15m";

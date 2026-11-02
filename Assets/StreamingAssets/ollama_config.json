@@ -1,9 +1,9 @@
 {
     "baseUrl": "http://localhost:11434",
-    "model": "llama3.2:3b",
+    "model": "gemma3:4b",
     "timeoutSeconds": 45,
     "healthTimeoutSeconds": 3,
-    "temperature": 0.8,
+    "temperature": 0.5,
     "maxTokens": 300,
     "retryCount": 1,
     "keepAlive": "15m"

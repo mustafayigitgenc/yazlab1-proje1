@@ -23,6 +23,7 @@ namespace Gumusdere.Npc.Dialogue
         private const int MaxPlayerMessageLength = 300;
         private const float HealthCheckInterval = 10f;
         private const int MaxLines = 40;
+        private const int TrustAfterKick = 15;
 
         private readonly List<DialogueLine> lines = new();
         private readonly List<ItemType> giftsReceived = new();
@@ -37,6 +38,7 @@ namespace Gumusdere.Npc.Dialogue
         private ISpeaker npcSpeaker;
         private Action<bool> setPlayerControls;
         private CancellationTokenSource lifetime;
+        private Func<bool> isMineOpen = () => false;
         private bool warmedUp;
 
         public NpcPersona Persona => persona;
@@ -71,6 +73,9 @@ namespace Gumusdere.Npc.Dialogue
         }
 
         public void RegisterAction(NpcAction action, IGameAction handler) => actions[action] = handler;
+
+        /// <summary>Maden kapısının açık olup olmadığını promptta göstermek için.</summary>
+        public void SetMineStateSource(Func<bool> source) => isMineOpen = source ?? (() => false);
 
         // ------------------------------------------------------------------ Pencere
 
@@ -137,7 +142,7 @@ namespace Gumusdere.Npc.Dialogue
 
         private async Task ProcessAsync(string playerText, CancellationToken token)
         {
-            List<ChatMessage> messages = promptBuilder.Build(history, playerText, Trust.Value, inventory.Snapshot(), giftsReceived);
+            List<ChatMessage> messages = promptBuilder.Build(history, playerText, Trust.Value, inventory.Snapshot(), giftsReceived, isMineOpen());
 
             LlmResult result = await ChatWithRetryAsync(messages, token);
             if (this == null || token.IsCancellationRequested) return;
@@ -153,7 +158,7 @@ namespace Gumusdere.Npc.Dialogue
 
                 // Bir kez onarım isteği: modelden sadece geçerli JSON istenir.
                 messages.Add(ChatMessage.FromAssistant(result.Content));
-                messages.Add(ChatMessage.FromUser("Önceki cevabın geçerli JSON değildi. Aynı cevabı SADECE istenen JSON biçiminde tekrar ver."));
+                messages.Add(ChatMessage.FromUser("Önceki cevabın geçersizdi: reply alanı Hüsnü Dayı'nın Türkçe sözü olmalı ve cevap sadece istenen JSON olmalı. Cevabını bu kurallara uyarak tekrar ver."));
                 LlmResult repaired = await client.ChatAsync(messages, NpcResponseParser.JsonSchema, token);
                 if (this == null || token.IsCancellationRequested) return;
 
@@ -187,7 +192,7 @@ namespace Gumusdere.Npc.Dialogue
 
         private void Apply(string playerText, NpcDecision decision)
         {
-            history.AddTurn(playerText, decision.RawJson);
+            history.AddTurn(PromptBuilder.FormatPlayer(playerText), decision.RawJson);
             foreach (string warning in decision.Warnings) Debug.Log($"[LLM] Düzeltme: {warning}");
 
             LastEmotion = decision.Emotion;
@@ -195,15 +200,43 @@ namespace Gumusdere.Npc.Dialogue
             AddLine(DialogueSpeaker.Npc, decision.Reply);
             npcSpeaker?.Say(decision.Reply, 4f);
 
-            if (decision.AcceptedGift.HasValue) TryAcceptGift(decision.AcceptedGift.Value);
+            if (decision.AcceptedGift.HasValue) TryAcceptGift(decision.AcceptedGift.Value, playerText);
 
             Debug.Log($"[LLM] trust {decision.TrustChange:+0;-0;0} → {Trust.Value}, emotion {decision.Emotion}, action {decision.Action}");
-            if (decision.Action != NpcAction.None) TryRunAction(decision.Action);
+
+            NpcAction action = decision.Action;
+            if (Trust.Value <= TrustMeter.Min && action != NpcAction.KickOut)
+            {
+                // Oyun kuralı: güven sıfıra inerse model ne derse desin NPC oyuncuyu kovar.
+                Debug.Log("[Kural] Güven 0'a düştü → otomatik kovma.");
+                action = NpcAction.KickOut;
+            }
+
+            if (action != NpcAction.None && TryRunAction(action) && action == NpcAction.KickOut)
+            {
+                OnKickedOut();
+            }
         }
 
-        private void TryAcceptGift(ItemType gift)
+        /// <summary>Kovulduktan sonra: güven biraz toparlanır, sohbet hafızası sıfırlanır (yeni bir başlangıç).</summary>
+        private void OnKickedOut()
         {
-            // Model "aldım" dese bile eşya gerçekten çantada yoksa hiçbir şey olmaz.
+            Trust.Reset(TrustAfterKick);
+            history.Clear();
+            LastEmotion = NpcEmotion.Angry;
+            AddLine(DialogueSpeaker.System, $"{persona.Name} seni kovdu! Biraz bekleyip daha saygılı bir şekilde tekrar dene.");
+        }
+
+        private void TryAcceptGift(ItemType gift, string playerText)
+        {
+            // Oyun kuralı 1: oyuncu bu mesajında eşyanın adını anmadıysa hediye yoktur.
+            if (!ItemInfo.IsMentionedIn(gift, playerText))
+            {
+                Debug.Log($"[Kural] Hediye reddedildi: oyuncu mesajında {ItemInfo.DisplayName(gift)} geçmiyor.");
+                return;
+            }
+
+            // Oyun kuralı 2: model "aldım" dese bile eşya gerçekten çantada yoksa hiçbir şey olmaz.
             if (!inventory.TryRemove(gift))
             {
                 Debug.Log($"[Kural] Hediye reddedildi: çantada {ItemInfo.DisplayName(gift)} yok.");
@@ -214,22 +247,23 @@ namespace Gumusdere.Npc.Dialogue
             AddLine(DialogueSpeaker.System, $"{persona.Name}'ya 1 {ItemInfo.DisplayName(gift)} verdin.");
         }
 
-        private void TryRunAction(NpcAction action)
+        private bool TryRunAction(NpcAction action)
         {
             if (!actions.TryGetValue(action, out IGameAction handler))
             {
                 Debug.LogWarning($"[Kural] '{action}' için tanımlı eylem yok.");
-                return;
+                return false;
             }
 
             if (!handler.CanExecute(Trust.Value, out string reason))
             {
-                Debug.Log($"[Kural] Model '{handler.Name}' istedi ama oyun kuralı reddetti: {reason}");
-                return;
+                Debug.Log($"[Kural] '{handler.Name}' istendi ama oyun kuralı reddetti: {reason}");
+                return false;
             }
 
             Debug.Log($"[Kural] Eylem uygulanıyor: {handler.Name}");
             handler.Execute();
+            return true;
         }
 
         // ------------------------------------------------------------------ Sunucu sağlık kontrolü

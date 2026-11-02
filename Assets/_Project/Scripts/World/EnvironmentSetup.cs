@@ -41,9 +41,13 @@ namespace Gumusdere.World
 
         private static Light FindSun()
         {
-            foreach (Light light in Object.FindObjectsByType<Light>(FindObjectsSortMode.None))
+            // Önce sahnenin ışık ayarındaki güneş, sonra şablon sahnedeki "Directional Light" nesnesi.
+            if (RenderSettings.sun != null) return RenderSettings.sun;
+
+            GameObject existing = GameObject.Find("Directional Light");
+            if (existing != null && existing.TryGetComponent(out Light found) && found.type == LightType.Directional)
             {
-                if (light.type == LightType.Directional) return light;
+                return found;
             }
 
             var go = new GameObject("Directional Light");

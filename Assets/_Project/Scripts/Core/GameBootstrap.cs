@@ -100,6 +100,11 @@ namespace Gumusdere.Core
                 log.Add("", "Maden kapısı açıldı! Hüsnü Dayı anahtarı verdi.", Color.white);
                 navMesh.RebuildAsync();
             };
+            layout.Door.Closed += () =>
+            {
+                log.Add("", "Hüsnü Dayı maden kapısını geri kapattı.", Color.white);
+                navMesh.RebuildAsync();
+            };
 
             // 9) Arayüz
             gameObject.AddComponent<HelpOverlay>().Initialize(cemal, commands, interactor, layout.Bridge);
@@ -130,7 +135,9 @@ namespace Gumusdere.Core
             interactor.Register(guard);
 
             dialogue.RegisterAction(NpcAction.OpenMine, new OpenMineAction(layout.Door, persona.OpenThreshold));
+            dialogue.RegisterAction(NpcAction.CloseMine, new CloseMineAction(layout.Door));
             dialogue.RegisterAction(NpcAction.KickOut, new KickOutAction(guard, persona.KickThreshold));
+            dialogue.SetMineStateSource(() => layout.Door.IsOpen);
             return dialogue;
         }
 
