@@ -75,6 +75,7 @@ namespace Gumusdere.UI
 
             if (e.keyCode == KeyCode.Escape)
             {
+                Gumusdere.Core.InputGate.ConsumeEscape();
                 dialogue.Close();
                 e.Use();
             }

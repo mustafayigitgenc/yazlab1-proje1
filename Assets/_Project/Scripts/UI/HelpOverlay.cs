@@ -50,7 +50,7 @@ namespace Gumusdere.UI
             GUILayout.Label("<b>Gümüşdere</b>", textStyle);
             GUILayout.Label("WASD / oklar: yürü    Shift: koş", textStyle);
             GUILayout.Label("E: kullan (tarla, çalı, iskele)    Boşluk: oltayı çek", textStyle);
-            GUILayout.Label("F: Cemal'e görev ver    G: bekle / takip / geri çağır    F1: debug", textStyle);
+            GUILayout.Label("F: Cemal'e görev ver    G: bekle / takip    F1: debug    Esc: menü", textStyle);
 
             if (DebugView.Enabled && companion != null && companion.Agent != null)
             {

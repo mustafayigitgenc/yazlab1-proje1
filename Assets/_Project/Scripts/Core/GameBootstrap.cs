@@ -11,7 +11,10 @@ using Gumusdere.Player;
 using Gumusdere.Spawning;
 using Gumusdere.UI;
 using Gumusdere.World;
+using System.Collections;
+using Gumusdere.Mining;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Gumusdere.Core
 {
@@ -28,6 +31,16 @@ namespace Gumusdere.Core
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoStart()
+        {
+            EnsureBootstrap();
+            // "Yeniden başla" sahneyi tekrar yüklediğinde oyun yeniden kurulsun.
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private static void OnSceneLoaded(Scene scene, LoadSceneMode mode) => EnsureBootstrap();
+
+        private static void EnsureBootstrap()
         {
             if (FindAnyObjectByType<GameBootstrap>() != null) return;
             new GameObject("[Gumusdere]").AddComponent<GameBootstrap>();
@@ -75,11 +88,11 @@ namespace Gumusdere.Core
             };
 
             // 6) Kamera, ışık, girdiler ve arayüz
-            Camera cam = SetUpCamera(player.transform);
+            Camera cam = SetUpCamera(player.transform, layout.MineStartZ);
             EnvironmentSetup.Apply(cam);
 
             var commands = player.gameObject.AddComponent<PlayerCommandInput>();
-            commands.Initialize(cemal, new IInteractable[] { layout.Winch });
+            commands.Initialize(cemal, new IInteractable[] { layout.Winch, layout.Rubble });
 
             // 7) Çanta ve E ile etkileşim (tarla, çalı, iskele)
             IInventory inventory = new Inventory();
@@ -100,6 +113,11 @@ namespace Gumusdere.Core
                 log.Add("", "Maden kapısı açıldı! Hüsnü Dayı anahtarı verdi.", Color.white);
                 navMesh.RebuildAsync();
             };
+            layout.Rubble.Cleared += () =>
+            {
+                log.Add("", "Göçük temizlendi, iç odaya giden yol açıldı.", Color.white);
+                navMesh.RebuildAsync();
+            };
             layout.Door.Closed += () =>
             {
                 log.Add("", "Hüsnü Dayı maden kapısını geri kapattı.", Color.white);
@@ -112,6 +130,18 @@ namespace Gumusdere.Core
             gameObject.AddComponent<FishingView>().Initialize(layout.Fishing);
             gameObject.AddComponent<DialogueView>().Initialize(dialogue, log);
             gameObject.AddComponent<LlmStatusIndicator>().Initialize(dialogue);
+
+            // 10) Oyun akışı: başlangıç → oyun ⇄ duraklatma → bitiş
+            var stats = new GameStats();
+            stats.Track(inventory);
+            cemal.TaskSucceeded += (taskName, seconds) => stats.CompanionTasksDone++;
+            cemal.TaskFailed += (taskName, reason) => stats.CompanionTasksFailed++;
+            dialogue.DecisionReceived += (decision, latencyMs) => stats.NpcReplies++;
+
+            var flow = gameObject.AddComponent<GameFlow>();
+            flow.Initialize(stats, setControls, () => !dialogue.IsOpen && !layout.Fishing.Game.IsActive);
+            layout.Vein.Mined += () => StartCoroutine(WinAfter(flow, 1.5f));
+            gameObject.AddComponent<GameScreensView>().Initialize(flow);
 
             log.Add("", "Gümüşdere'ye hoş geldin ağa! Köprü kalkık; köprü başına gidip F ile Cemal'e iş ver.", Color.white);
         }
@@ -141,7 +171,13 @@ namespace Gumusdere.Core
             return dialogue;
         }
 
-        private static Camera SetUpCamera(Transform target)
+        private static IEnumerator WinAfter(GameFlow flow, float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
+            flow.Win();
+        }
+
+        private static Camera SetUpCamera(Transform target, float mineStartZ)
         {
             Camera cam = Camera.main;
             if (cam == null)
@@ -153,7 +189,7 @@ namespace Gumusdere.Core
 
             CameraFollow follow = cam.GetComponent<CameraFollow>();
             if (follow == null) follow = cam.gameObject.AddComponent<CameraFollow>();
-            follow.Initialize(target);
+            follow.Initialize(target, mineStartZ);
             return cam;
         }
 
