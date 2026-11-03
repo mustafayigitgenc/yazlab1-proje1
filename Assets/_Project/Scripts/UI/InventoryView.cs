@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Gumusdere.Economy;
 using Gumusdere.Items;
 using UnityEngine;
 
@@ -10,12 +11,14 @@ namespace Gumusdere.UI
         private const float Width = 220f;
 
         private IInventory inventory;
+        private IWallet wallet;
         private GUIStyle textStyle;
         private Texture2D white;
 
-        public void Initialize(IInventory playerInventory)
+        public void Initialize(IInventory playerInventory, IWallet playerWallet)
         {
             inventory = playerInventory;
+            wallet = playerWallet;
         }
 
         private void OnGUI()
@@ -34,7 +37,8 @@ namespace Gumusdere.UI
             var panel = new Rect(w - Width - 12f, h - height - 12f, Width, height);
 
             Fill(panel, new Color(0f, 0f, 0f, 0.55f));
-            GUI.Label(new Rect(panel.x + 12f, panel.y + 6f, Width - 24f, 26f), "<b>Çanta</b>", textStyle);
+            GUI.Label(new Rect(panel.x + 12f, panel.y + 6f, Width - 24f, 26f),
+                wallet != null ? $"<b>Çanta</b>   <color=#f2d36b>{wallet.Money} lira</color>" : "<b>Çanta</b>", textStyle);
 
             float y = panel.y + 34f;
             if (items.Count == 0)

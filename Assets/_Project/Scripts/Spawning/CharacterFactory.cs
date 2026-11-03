@@ -33,8 +33,31 @@ namespace Gumusdere.Spawning
             Shapes.Box("Pantolon", t, new Vector3(0f, 0.3f, 0f), new Vector3(0.55f, 0.6f, 0.45f), Palette.Trousers, false);
             Shapes.Sphere("Kafa", t, new Vector3(0f, 1.5f, 0f), Vector3.one * 0.5f, Palette.Skin, false);
             Shapes.Box("Burun", t, new Vector3(0f, 1.5f, 0.25f), new Vector3(0.1f, 0.1f, 0.1f), Palette.Skin, false);
-            Shapes.Cylinder("Sapka_Kenar", t, new Vector3(0f, 1.72f, 0f), new Vector3(0.75f, 0.03f, 0.75f), Palette.Hay, false);
-            Shapes.Cylinder("Sapka_Tepe", t, new Vector3(0f, 1.85f, 0f), new Vector3(0.38f, 0.12f, 0.38f), Palette.Hay, false);
+            var hat = new GameObject(PlayerEquipmentView.HatName).transform;
+            hat.SetParent(t, false);
+            Shapes.Cylinder("Sapka_Kenar", hat, new Vector3(0f, 1.72f, 0f), new Vector3(0.75f, 0.03f, 0.75f), Palette.Hay, false);
+            Shapes.Cylinder("Sapka_Tepe", hat, new Vector3(0f, 1.85f, 0f), new Vector3(0.38f, 0.12f, 0.38f), Palette.Hay, false);
+
+            // Bakkaldan alınınca görünen ekipman (PlayerEquipmentView açıp kapatır).
+            var helmet = new GameObject(PlayerEquipmentView.HelmetName).transform;
+            helmet.SetParent(t, false);
+            Shapes.Sphere("Baret", helmet, new Vector3(0f, 1.66f, 0f), new Vector3(0.56f, 0.36f, 0.56f), Palette.Helmet, false);
+            Shapes.Box("Baret_Siper", helmet, new Vector3(0f, 1.62f, 0.22f), new Vector3(0.45f, 0.04f, 0.2f), Palette.Helmet, false);
+            helmet.gameObject.SetActive(false);
+
+            var lantern = new GameObject(PlayerEquipmentView.LanternName).transform;
+            lantern.SetParent(t, false);
+            lantern.localPosition = new Vector3(-0.45f, 0.75f, 0.15f);
+            Shapes.Box("Fener_Govde", lantern, Vector3.zero, new Vector3(0.16f, 0.22f, 0.16f), Palette.DarkWood, false);
+            Shapes.Sphere("Fener_Isik", lantern, new Vector3(0f, 0.01f, 0f), Vector3.one * 0.13f, Palette.Hay, false);
+            var glow = new GameObject("Fener_Lamba").AddComponent<Light>();
+            glow.transform.SetParent(lantern, false);
+            glow.type = LightType.Point;
+            glow.range = 7f;
+            glow.intensity = 2.2f;
+            glow.color = new Color(1f, 0.82f, 0.5f);
+            glow.shadows = LightShadows.None;
+            lantern.gameObject.SetActive(false);
 
             // Cemal ve inekler oyuncunun içinden geçmesin diye: hareketli, delik açmayan NavMesh engeli.
             var obstacle = root.AddComponent<NavMeshObstacle>();
@@ -124,6 +147,26 @@ namespace Gumusdere.Spawning
             body.center = new Vector3(0f, 0.9f, 0f);
             body.radius = 0.4f;
             body.height = 1.8f;
+            return root;
+        }
+
+        /// <summary>Bakkal Nazmi'nin görünümü: önlüklü, bıyıklı, kasketli.</summary>
+        public static GameObject CreateShopkeeperBody(Transform parent, Vector3 position, float facingY)
+        {
+            var root = new GameObject("Bakkal_Nazmi");
+            root.transform.SetParent(parent, false);
+            root.transform.position = position;
+            root.transform.rotation = Quaternion.Euler(0f, facingY, 0f);
+
+            Transform t = root.transform;
+            Shapes.Capsule("Govde", t, new Vector3(0f, 0.7f, 0f), new Vector3(0.85f, 0.55f, 0.75f), Palette.RoofBlue, false);
+            Shapes.Box("Onluk", t, new Vector3(0f, 0.65f, 0.3f), new Vector3(0.55f, 0.75f, 0.06f), Palette.Wall, false);
+            Shapes.Box("Pantolon", t, new Vector3(0f, 0.3f, 0f), new Vector3(0.6f, 0.6f, 0.5f), Palette.Trousers, false);
+            Shapes.Sphere("Kafa", t, new Vector3(0f, 1.5f, 0f), Vector3.one * 0.5f, Palette.Skin, false);
+            Shapes.Box("Burun", t, new Vector3(0f, 1.5f, 0.25f), new Vector3(0.1f, 0.1f, 0.1f), Palette.Skin, false);
+            Shapes.Box("Biyik", t, new Vector3(0f, 1.42f, 0.25f), new Vector3(0.26f, 0.05f, 0.06f), Palette.DarkWood, false);
+            Shapes.Cylinder("Kasket", t, new Vector3(0f, 1.74f, 0f), new Vector3(0.5f, 0.07f, 0.5f), Palette.Roof, false);
+            Shapes.Box("Kasket_Siper", t, new Vector3(0f, 1.7f, 0.24f), new Vector3(0.36f, 0.03f, 0.18f), Palette.Roof, false);
             return root;
         }
 

@@ -126,6 +126,43 @@ namespace Gumusdere.World
             House(zone, new Vector3(22f, 0f, 2f), new Vector3(5f, 2.5f, 4f), Palette.RoofBlue);
             House(zone, new Vector3(29f, 0f, -6f), new Vector3(5f, 2.5f, 4f), Palette.Roof);
             House(zone, new Vector3(21f, 0f, -14f), new Vector3(6f, 2.8f, 4.5f), Palette.RoofBlue);
+            BuildShop(zone, new Vector3(17f, 0f, -3f));
+        }
+
+        /// <summary>Bakkal Nazmi'nin tezgâhı: tezgâh, direkler, tente ve üstünde birkaç ürün. Müşteri güney tarafında durur.</summary>
+        private void BuildShop(Transform parent, Vector3 c)
+        {
+            var root = new GameObject("Bakkal").transform;
+            root.SetParent(parent, false);
+            root.position = c;
+
+            Shapes.Box("Tezgah", root, new Vector3(0f, 0.5f, -0.9f), new Vector3(3.2f, 1f, 0.7f), Palette.Wood);
+            Shapes.Box("Tezgah_Ust", root, new Vector3(0f, 1.03f, -0.9f), new Vector3(3.3f, 0.06f, 0.8f), Palette.DarkWood, false);
+            foreach (float x in new[] { -1.5f, 1.5f })
+            {
+                Shapes.Box("Direk", root, new Vector3(x, 1.3f, -1.2f), new Vector3(0.15f, 2.6f, 0.15f), Palette.DarkWood);
+                Shapes.Box("Direk", root, new Vector3(x, 1.3f, 1.0f), new Vector3(0.15f, 2.6f, 0.15f), Palette.DarkWood);
+            }
+            Shapes.Box("Arka_Raf", root, new Vector3(0f, 0.9f, 1.0f), new Vector3(3.0f, 1.8f, 0.4f), Palette.Wood);
+
+            // Çizgili tente (kırmızı-beyaz)
+            for (int i = 0; i < 6; i++)
+            {
+                Color stripe = i % 2 == 0 ? Palette.Roof : Palette.Wall;
+                Shapes.Box("Tente", root, new Vector3(-1.5f + i * 0.6f, 2.65f, -0.1f), new Vector3(0.6f, 0.1f, 2.6f), stripe, false);
+            }
+            Shapes.Box("Tente_Sacak", root, new Vector3(0f, 2.5f, -1.4f), new Vector3(3.6f, 0.25f, 0.05f), Palette.Roof, false);
+
+            // Tezgâhtaki ürünler
+            Shapes.Sphere("Urun_Balkabagi", root, new Vector3(-1.0f, 1.25f, -0.9f), new Vector3(0.45f, 0.38f, 0.45f), Palette.Pumpkin, false);
+            Shapes.Sphere("Urun_Bogurtlen", root, new Vector3(-0.45f, 1.12f, -0.95f), Vector3.one * 0.18f, Palette.Berry, false);
+            Shapes.Sphere("Urun_Baret", root, new Vector3(0.45f, 1.18f, -0.9f), new Vector3(0.42f, 0.26f, 0.42f), Palette.Helmet, false);
+            Shapes.Box("Urun_Fener", root, new Vector3(1.05f, 1.2f, -0.9f), new Vector3(0.18f, 0.28f, 0.18f), Palette.Hay, false);
+
+            layout.ShopkeeperSpot = c + new Vector3(0f, 0f, 0.1f);
+            layout.Shop = root.gameObject.AddComponent<Gumusdere.Economy.ShopStall>();
+            layout.Shop.Initialize(c + new Vector3(0f, 0f, -1.9f));
+            layout.PlayerInteractables.Add(layout.Shop);
         }
 
         // ------------------------------------------------------------------ Nehir ve köprü
@@ -290,7 +327,8 @@ namespace Gumusdere.World
             f.Add(MapFeature.At("", 22f, 2f, 5f, 4f, Palette.RoofBlue));
             f.Add(MapFeature.At("", 29f, -6f, 5f, 4f, Palette.Roof));
             f.Add(MapFeature.At("", 21f, -14f, 6f, 4.5f, Palette.RoofBlue));
-            f.Add(MapFeature.At("Köy", 25f, -4f, 0f, 0f, none));
+            f.Add(MapFeature.At("Köy", 25f, -9f, 0f, 0f, none));
+            f.Add(MapFeature.At("Bakkal", 17f, -3f, 3.6f, 2.6f, Palette.Roof));
 
             // Mera
             Rect pasture = layout.CowPasture;

@@ -45,6 +45,10 @@ namespace Gumusdere.World
         public Rect MapBounds;
         public readonly List<Vector3> BerryBushes = new();
 
+        /// <summary>Bakkal tezgâhı ve bakkal Nazmi'nin durduğu yer.</summary>
+        public Gumusdere.Economy.ShopStall Shop;
+        public Vector3 ShopkeeperSpot;
+
         public Vector3 FishingSpot;
         public Gumusdere.Fishing.FishingSpot Fishing;
 
