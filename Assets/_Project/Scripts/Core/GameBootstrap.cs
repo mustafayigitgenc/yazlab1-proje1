@@ -92,7 +92,7 @@ namespace Gumusdere.Core
             EnvironmentSetup.Apply(cam);
 
             var commands = player.gameObject.AddComponent<PlayerCommandInput>();
-            commands.Initialize(cemal, new IInteractable[] { layout.Winch, layout.Rubble });
+            commands.Initialize(cemal, new IInteractable[] { layout.Winch, layout.Rubble, layout.Watering });
 
             // 7) Çanta ve E ile etkileşim (tarla, çalı, iskele)
             IInventory inventory = new Inventory();
@@ -139,11 +139,18 @@ namespace Gumusdere.Core
             dialogue.DecisionReceived += (decision, latencyMs) => stats.NpcReplies++;
 
             var flow = gameObject.AddComponent<GameFlow>();
-            flow.Initialize(stats, setControls, () => !dialogue.IsOpen && !layout.Fishing.Game.IsActive);
+            var map = gameObject.AddComponent<WorldMapView>();
+            flow.Initialize(stats, setControls, () => !dialogue.IsOpen && !layout.Fishing.Game.IsActive && !map.IsOpen);
+
+            // 11) M ile açılan harita
+            map.Initialize(layout, cemal, () => flow.IsPlaying && !dialogue.IsOpen && !layout.Fishing.Game.IsActive);
+            map.AddMarker("Sen", player.transform, Palette.Shirt);
+            map.AddMarker("Cemal", cemal.transform, Palette.WorkerShirt);
+            map.AddMarker("Hüsnü Dayı", dialogue.transform, Palette.Vest);
             layout.Vein.Mined += () => StartCoroutine(WinAfter(flow, 1.5f));
             gameObject.AddComponent<GameScreensView>().Initialize(flow);
 
-            log.Add("", "Gümüşdere'ye hoş geldin ağa! Köprü kalkık; köprü başına gidip F ile Cemal'e iş ver.", Color.white);
+            log.Add("", "Gümüşdere'ye hoş geldin ağa! Köprü kalkık; köprü başına gidip F ile Cemal'e iş ver. M: harita.", Color.white);
         }
 
         private NpcDialogueController SetUpGuard(WorldLayout layout, Transform parent, Transform player,

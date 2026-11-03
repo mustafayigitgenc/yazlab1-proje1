@@ -33,6 +33,16 @@ namespace Gumusdere.World
         public Rect CowPasture;
 
         public readonly List<Vector3> FarmTiles = new();
+        public readonly List<Gumusdere.Farming.FarmPlot> Plots = new();
+
+        /// <summary>Kuyudan kova alıp tarlayı sulama görevi (Cemal'in çok duraklı görevi).</summary>
+        public Gumusdere.Farming.WateringJob Watering;
+
+        /// <summary>M ile açılan haritada çizilecek bölgeler (x/z düzleminde).</summary>
+        public readonly List<MapFeature> MapFeatures = new();
+
+        /// <summary>Haritanın kapsadığı dünya alanı (x/z).</summary>
+        public Rect MapBounds;
         public readonly List<Vector3> BerryBushes = new();
 
         public Vector3 FishingSpot;

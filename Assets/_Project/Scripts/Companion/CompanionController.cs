@@ -13,6 +13,7 @@ namespace Gumusdere.Companion
     /// İşçi Cemal: otonom yapay zekâ yoldaşı.
     /// Hareketi tamamen NavMeshAgent'ın yol bulmasıyla yapılır; karar mantığı bir durum makinesidir:
     ///   Takip ↔ Bekle,  Takip → Hedefe git → Kullan → Geri dön → Takip
+    ///   (Çok duraklı görevlerde, örn. tarla sulama: Kullan → Hedefe git → Kullan ... döngüsü durak bitene kadar sürer.)
     ///   (Hedefe giderken takılırsa yeniden yol arar; yol yoksa görevi bırakıp geri döner.)
     /// Bu sınıf sadece bileşenleri bir arada tutar; davranışın kendisi durum sınıflarındadır.
     /// </summary>
@@ -88,7 +89,14 @@ namespace Gumusdere.Companion
 
             CurrentTask = target;
             taskStartTime = Time.time;
-            Speaker?.Say($"Tamam ağam, {target.DisplayName.ToLowerInvariant()} işini hallediyorum!");
+            if (target is IMultiStepTask multiStep)
+            {
+                multiStep.Begin(gameObject); // çok duraklı görev kendi cümlesini söyler
+            }
+            else
+            {
+                Speaker?.Say($"Tamam ağam, {target.DisplayName.ToLowerInvariant()} işini hallediyorum!");
+            }
             Brain.ChangeState(GoToTargetState);
             return true;
         }
@@ -112,6 +120,7 @@ namespace Gumusdere.Companion
         {
             string taskName = CurrentTask?.DisplayName ?? "?";
             float duration = Time.time - taskStartTime;
+            EndMultiStep();
             CurrentTask = null;
             TaskSucceeded?.Invoke(taskName, duration);
             Brain.ChangeState(ReturnState);
@@ -121,10 +130,29 @@ namespace Gumusdere.Companion
         public void FailTask(string reason)
         {
             string taskName = CurrentTask?.DisplayName ?? "?";
+            EndMultiStep();
             CurrentTask = null;
             Debug.LogWarning($"[{DisplayName}] Görev başarısız ({taskName}): {reason}");
             TaskFailed?.Invoke(taskName, reason);
             Brain.ChangeState(ReturnState);
+        }
+
+        /// <summary>
+        /// Çok duraklı görevde bir durak bitti: sıradaki durağa yeniden yol bul.
+        /// Durak kalmadıysa false döner (görev tamamlanmalı).
+        /// </summary>
+        public bool TryContinueToNextStep()
+        {
+            if (CurrentTask is not IMultiStepTask multiStep || !multiStep.HasNextStep) return false;
+
+            multiStep.AdvanceStep();
+            Brain.ChangeState(GoToTargetState);
+            return true;
+        }
+
+        private void EndMultiStep()
+        {
+            if (CurrentTask is IMultiStepTask multiStep) multiStep.End(gameObject);
         }
 
         /// <summary>Cemal şu an sığ suyun içinde mi (NavMesh alanına bakarak).</summary>
