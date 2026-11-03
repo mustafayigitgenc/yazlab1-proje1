@@ -243,8 +243,22 @@ namespace Gumusdere.Npc.Dialogue
                 return;
             }
 
+            // Oyun kuralı 3: hediyenin güvene etkisini NPC'nin zevk tablosu belirler (model değil).
+            GiftTaste taste = persona.Gifts.TasteOf(gift);
+            int effect = persona.Gifts.Receive(gift);
+            Trust.Apply(effect);
             giftsReceived.Add(gift);
-            AddLine(DialogueSpeaker.System, $"{persona.Name}'ya 1 {ItemInfo.DisplayName(gift)} verdin.");
+
+            string feeling = taste switch
+            {
+                GiftTaste.Loved => "çok sevdi",
+                GiftTaste.Liked => "beğendi",
+                GiftTaste.Disliked => "hiç hoşlanmadı",
+                GiftTaste.Hated => "buna çok kızdı",
+                _ => "kabul etti"
+            };
+            AddLine(DialogueSpeaker.System, $"{persona.Name}'ya 1 {ItemInfo.DisplayName(gift)} verdin; {feeling} (güven {effect:+0;-0;0}).");
+            Debug.Log($"[Hediye] {ItemInfo.DisplayName(gift)}: {taste}, etki {effect}, güven {Trust.Value}");
         }
 
         private bool TryRunAction(NpcAction action)

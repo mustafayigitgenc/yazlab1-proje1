@@ -21,15 +21,25 @@ namespace Gumusdere.Npc.Parsing
 
         private const int MissingNumber = int.MinValue;
 
-        /// <summary>Ollama'nın "format" alanına verilen JSON şeması.</summary>
-        public const string JsonSchema =
-            "{\"type\":\"object\",\"properties\":{" +
-            "\"reply\":{\"type\":\"string\"}," +
-            "\"emotion\":{\"type\":\"string\",\"enum\":[\"neutral\",\"friendly\",\"suspicious\",\"angry\",\"sad\"]}," +
-            "\"trust_change\":{\"type\":\"integer\",\"minimum\":-20,\"maximum\":20}," +
-            "\"accepted_gift\":{\"type\":\"string\",\"enum\":[\"none\",\"alabalik\",\"balkabagi\",\"bogurtlen\"]}," +
-            "\"action\":{\"type\":\"string\",\"enum\":[\"none\",\"open_mine\",\"close_mine\",\"kick_out\"]}" +
-            "},\"required\":[\"reply\",\"emotion\",\"trust_change\",\"accepted_gift\",\"action\"]}";
+        /// <summary>
+        /// Ollama'nın "format" alanına verilen JSON şeması. Hediye anahtarları eşya tablosundan üretilir,
+        /// böylece yeni bir eşya eklendiğinde şema kendiliğinden güncellenir.
+        /// </summary>
+        public static readonly string JsonSchema = BuildSchema();
+
+        private static string BuildSchema()
+        {
+            var gifts = new System.Text.StringBuilder("\"none\"");
+            foreach (ItemType type in ItemInfo.All) gifts.Append(",\"").Append(ItemInfo.Key(type)).Append('"');
+
+            return "{\"type\":\"object\",\"properties\":{" +
+                   "\"reply\":{\"type\":\"string\"}," +
+                   "\"emotion\":{\"type\":\"string\",\"enum\":[\"neutral\",\"friendly\",\"suspicious\",\"angry\",\"sad\"]}," +
+                   "\"trust_change\":{\"type\":\"integer\",\"minimum\":-20,\"maximum\":20}," +
+                   "\"accepted_gift\":{\"type\":\"string\",\"enum\":[" + gifts + "]}," +
+                   "\"action\":{\"type\":\"string\",\"enum\":[\"none\",\"open_mine\",\"close_mine\",\"kick_out\"]}" +
+                   "},\"required\":[\"reply\",\"emotion\",\"trust_change\",\"accepted_gift\",\"action\"]}";
+        }
 
         [Serializable]
         private sealed class Dto
@@ -223,10 +233,7 @@ namespace Gumusdere.Npc.Parsing
             string key = Normalize(value);
             if (key == "" || key == "none") return null;
 
-            foreach (ItemType type in Enum.GetValues(typeof(ItemType)))
-            {
-                if (ItemInfo.Key(type) == key) return type;
-            }
+            if (ItemInfo.TryParseKey(key, out ItemType type)) return type;
 
             warnings.Add($"accepted_gift '{value}' tanınmadı → none");
             return null;

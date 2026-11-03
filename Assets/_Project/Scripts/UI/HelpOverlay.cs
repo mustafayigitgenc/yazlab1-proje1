@@ -46,10 +46,10 @@ namespace Gumusdere.UI
         private void DrawHelpPanel()
         {
             float panelHeight = DebugView.Enabled ? 275f : 125f;
-            GUILayout.BeginArea(new Rect(12f, 12f, 450f, panelHeight), panelStyle);
+            GUILayout.BeginArea(new Rect(12f, 12f, 540f, panelHeight), panelStyle);
             GUILayout.Label("<b>Gümüşdere</b>", textStyle);
             GUILayout.Label("WASD / oklar: yürü    Shift: koş", textStyle);
-            GUILayout.Label("E: kullan (tarla, çalı, iskele)    Boşluk: oltayı çek", textStyle);
+            GUILayout.Label("E: kullan / konuş (tarla, çalı, mantar, iskele)    Boşluk: oltayı çek", textStyle);
             GUILayout.Label("F: Cemal'e görev ver    G: bekle / takip    F1: debug    Esc: menü", textStyle);
 
             if (DebugView.Enabled && companion != null && companion.Agent != null)
