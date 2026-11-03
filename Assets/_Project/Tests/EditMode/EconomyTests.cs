@@ -1,6 +1,7 @@
 using Gumusdere.Economy;
 using Gumusdere.Items;
 using Gumusdere.Mining;
+using Gumusdere.Village;
 using NUnit.Framework;
 
 namespace Gumusdere.Tests
@@ -93,6 +94,41 @@ namespace Gumusdere.Tests
             inventory.Add(ItemType.Lantern);
             Assert.IsNull(MineEntryRule.Check(70, 70, false, inventory), "her şey tamam");
             Assert.IsNotNull(MineEntryRule.Check(90, 70, true, inventory), "kapı zaten açık");
+            StringAssert.Contains("kiriş", MineEntryRule.Check(90, 70, false, inventory, 2), "kiriş eksik");
+            Assert.IsNull(MineEntryRule.Check(90, 70, false, inventory, MineEntryRule.RequiredBeams));
+        }
+
+        [Test]
+        public void IlanPanosu_TeslimEdinceEsyaDuserOdulGelir()
+        {
+            var book = new QuestBook(inventory, wallet, QuestBook.GumusdereQuests());
+            VillageQuest trout = book.Quests[0];
+            Assert.AreEqual(ItemType.Trout, trout.Item);
+
+            inventory.Add(ItemType.Trout, 2);
+            Assert.IsFalse(book.CanComplete(trout));
+            Assert.IsFalse(book.TryComplete(trout, out string message));
+            StringAssert.Contains("1 alabalık daha", message);
+
+            inventory.Add(ItemType.Trout);
+            int completedEvents = 0;
+            book.Completed += q => completedEvents++;
+            Assert.IsTrue(book.TryComplete(trout, out _));
+            Assert.IsTrue(trout.Done);
+            Assert.AreEqual(0, inventory.Count(ItemType.Trout));
+            Assert.AreEqual(10 + trout.Reward, wallet.Money);
+            Assert.AreEqual(1, book.CompletedCount);
+            Assert.AreEqual(1, completedEvents);
+            Assert.IsFalse(book.TryComplete(trout, out _), "ikinci kez teslim edilmez");
+        }
+
+        [Test]
+        public void IlanPanosu_OdulBakkalFiyatindanYuksek()
+        {
+            foreach (VillageQuest q in QuestBook.GumusdereQuests())
+            {
+                Assert.Greater(q.Reward, q.Amount * PriceList.SellPrice(q.Item), q.Title);
+            }
         }
     }
 }

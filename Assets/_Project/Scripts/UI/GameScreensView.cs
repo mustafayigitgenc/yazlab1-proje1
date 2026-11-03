@@ -97,7 +97,7 @@ namespace Gumusdere.UI
                 (s.CompanionTasksFailed > 0 ? $"  (yarım kalan: {s.CompanionTasksFailed})" : "") + "\n" +
                 $"Toplanan eşyalar: <b>{s.ItemsCollected}</b>\n" +
                 $"Hüsnü Dayı'ya verilen hediyeler: <b>{s.GiftsGiven}</b>\n" +
-                $"Bakkalda kazanılan para: <b>{s.MoneyEarned} lira</b>\n" +
+                $"Kazanılan para: <b>{s.MoneyEarned} lira</b>   Köy istekleri: <b>{s.QuestsCompleted}/5</b>\n" +
                 $"Hüsnü Dayı ile konuşma sayısı: <b>{s.NpcReplies}</b>", textStyle);
             GUILayout.Space(20f);
             if (GUILayout.Button("Tekrar oyna", buttonStyle, GUILayout.Height(44f))) flow.Restart();

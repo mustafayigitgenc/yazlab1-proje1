@@ -11,6 +11,7 @@ using Gumusdere.Npc.Parsing;
 using Gumusdere.Player;
 using Gumusdere.Spawning;
 using Gumusdere.Testing;
+using Gumusdere.Village;
 using Gumusdere.UI;
 using Gumusdere.World;
 using System.Collections;
@@ -94,7 +95,7 @@ namespace Gumusdere.Core
             EnvironmentSetup.Apply(cam);
 
             var commands = player.gameObject.AddComponent<PlayerCommandInput>();
-            commands.Initialize(cemal, new IInteractable[] { layout.Winch, layout.Rubble, layout.Watering });
+            commands.Initialize(cemal, new IInteractable[] { layout.Winch, layout.Rubble, layout.Watering, layout.Beams });
 
             // 7) Çanta ve E ile etkileşim (tarla, çalı, iskele)
             IInventory inventory = new Inventory();
@@ -112,6 +113,18 @@ namespace Gumusdere.Core
             // 7b) Para ve bakkal Nazmi: ürün sat, baret ve fener al
             var wallet = new Wallet(PriceList.StartMoney);
             ShopView shopView = SetUpShop(layout, characters, inventory, wallet, setControls, log);
+
+            // 7c) Köy ilan panosu: köylülerin istekleri (bakkaldan daha iyi para)
+            var quests = new QuestBook(inventory, wallet, QuestBook.GumusdereQuests());
+            var questView = gameObject.AddComponent<QuestView>();
+            questView.Initialize(quests, setControls, log);
+            layout.QuestBoard.Requested += questView.Open;
+
+            layout.Beams.BeamDelivered += count =>
+            {
+                log.Add("", $"Madenin ağzına destek kirişi bırakıldı ({count}/{Gumusdere.Mining.MineEntryRule.RequiredBeams}).", Color.white);
+                if (layout.Beams.IsComplete) log.Add("", "Kirişler tamam! Hüsnü Dayı'ya bunu söyleyebilirsin.", Color.white);
+            };
 
             // 8) Hüsnü Dayı: yerel LLM (Ollama) ile konuşan NPC
             NpcDialogueController dialogue = SetUpGuard(layout, characters, player.transform, inventory, setControls, interactor);
@@ -151,19 +164,21 @@ namespace Gumusdere.Core
             var map = gameObject.AddComponent<WorldMapView>();
             var agentTest = gameObject.AddComponent<AgentTestRunner>();
             var dialogueTest = gameObject.AddComponent<DialogueTestRunner>();
-            flow.Initialize(stats, setControls,
-                () => !dialogue.IsOpen && !layout.Fishing.Game.IsActive && !map.IsOpen && !shopView.IsOpen && !agentTest.IsRunning);
+            // Ekranı kaplayan bir pencere açık mı (sohbet, balık, bakkal, ilan panosu)?
+            bool UiBusy() => dialogue.IsOpen || layout.Fishing.Game.IsActive || shopView.IsOpen || questView.IsOpen;
+            quests.Completed += quest => stats.QuestsCompleted++;
+            flow.Initialize(stats, setControls, () => !UiBusy() && !map.IsOpen && !agentTest.IsRunning);
 
             // 11) M ile açılan harita
-            map.Initialize(layout, cemal, () => flow.IsPlaying && !dialogue.IsOpen && !layout.Fishing.Game.IsActive && !shopView.IsOpen);
+            map.Initialize(layout, cemal, () => flow.IsPlaying && !UiBusy());
             map.AddMarker("Sen", player.transform, Palette.Shirt);
             map.AddMarker("Cemal", cemal.transform, Palette.WorkerShirt);
             map.AddMarker("Hüsnü Dayı", dialogue.transform, Palette.Vest);
 
             // 12) Testler: F9 ajan testi, F10 diyalog testi (sonuçlar TestResults/ klasörüne)
             agentTest.Initialize(cemal, player.transform, layout.Bridge, setControls,
-                () => flow.IsPlaying && !dialogue.IsOpen && !layout.Fishing.Game.IsActive && !shopView.IsOpen && !dialogueTest.IsRunning);
-            dialogueTest.Initialize(() => flow.IsPlaying && !dialogue.IsOpen && !shopView.IsOpen && !agentTest.IsRunning);
+                () => flow.IsPlaying && !UiBusy() && !dialogueTest.IsRunning);
+            dialogueTest.Initialize(() => flow.IsPlaying && !UiBusy() && !agentTest.IsRunning);
             layout.Vein.Mined += () => StartCoroutine(WinAfter(flow, 1.5f));
             gameObject.AddComponent<GameScreensView>().Initialize(flow);
 
@@ -188,10 +203,11 @@ namespace Gumusdere.Core
             guard.Initialize(dialogue, player);
             interactor.Register(guard);
 
-            dialogue.RegisterAction(NpcAction.OpenMine, new OpenMineAction(layout.Door, persona.OpenThreshold, inventory));
+            dialogue.RegisterAction(NpcAction.OpenMine, new OpenMineAction(layout.Door, persona.OpenThreshold, inventory, () => layout.Beams.Delivered));
             dialogue.RegisterAction(NpcAction.CloseMine, new CloseMineAction(layout.Door));
             dialogue.RegisterAction(NpcAction.KickOut, new KickOutAction(guard, persona.KickThreshold));
             dialogue.SetMineStateSource(() => layout.Door.IsOpen);
+            dialogue.SetExtraStateSource(() => Gumusdere.Mining.MineEntryRule.DescribeBeams(layout.Beams.Delivered));
             return dialogue;
         }
 

@@ -17,6 +17,7 @@ namespace Gumusdere.Core
         public int ItemsCollected { get; private set; }
         public int GiftsGiven { get; set; }
         public int MoneyEarned { get; set; }
+        public int QuestsCompleted { get; set; }
         public int NpcReplies { get; set; }
 
         public float ElapsedSeconds => running ? Time.time - startTime : endTime - startTime;

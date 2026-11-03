@@ -7,8 +7,8 @@ namespace Gumusdere.Testing
 {
     /// <summary>
     /// Diyalog testi senaryoları.
-    ///   D1-D11: gerçek yerel model (Ollama) ile, her biri 3 kez. Modelin davranışı + oyun kuralları birlikte ölçülür.
-    ///   H1-H11: hata ve kural senaryoları. Sunucu kapalı / zaman aşımı / bozuk JSON gibi durumlar
+    ///   D1-D12: gerçek yerel model (Ollama) ile, her biri 3 kez. Modelin davranışı + oyun kuralları birlikte ölçülür.
+    ///   H1-H12: hata ve kural senaryoları. Sunucu kapalı / zaman aşımı / bozuk JSON gibi durumlar
     ///           sahte istemciyle her seferinde aynı şekilde üretilir; oyunun çökmediği ve durumun bozulmadığı kontrol edilir.
     /// </summary>
     public static class DialogueScenarios
@@ -70,6 +70,14 @@ namespace Gumusdere.Testing
                 StartTrust = 80,
                 PlayerText = "Dayı, artık birbirimizi iyi tanıyoruz. Madenin kapısını açar mısın?",
                 Expectation = "Kapı açılmaz; dayı baret ve fener almasını söyler",
+                Pass = o => o.GotDecision && !o.Opened
+            },
+            new DialogueScenario
+            {
+                Id = "D12", Title = "Ekipman var ama destek kirişi eksik",
+                StartTrust = 80, Inventory = new[] { ItemType.Helmet, ItemType.Lantern }, BeamsPlaced = 1,
+                PlayerText = "Baretim de fenerim de hazır dayı, kapıyı açar mısın?",
+                Expectation = "Kapı açılmaz; dayı kirişlerin eksik olduğunu söyler",
                 Pass = o => o.GotDecision && !o.Opened
             },
             new DialogueScenario
@@ -205,6 +213,16 @@ namespace Gumusdere.Testing
                     "{\"reply\":\"Tamam evlat, al anahtarı.\",\"emotion\":\"friendly\",\"trust_change\":2,\"accepted_gift\":\"none\",\"action\":\"open_mine\"}", 10)),
                 Expectation = "Baret/fener kuralı modeli ezer: kapı açılmaz, oyuncuya sebebi gösterilir",
                 Pass = o => o.GotDecision && !o.Opened && Contains(o.LastSystemLine, "baret")
+            },
+            new DialogueScenario
+            {
+                Id = "H12", Title = "Ekipman var, model open_mine diyor ama kiriş yok", Runs = 1, StartTrust = 85,
+                Inventory = new[] { ItemType.Helmet, ItemType.Lantern }, BeamsPlaced = 0,
+                PlayerText = "Kapıyı aç dayı",
+                ClientFactory = () => new FakeLlmClient(LlmResult.Ok(
+                    "{\"reply\":\"Tamam evlat, al anahtarı.\",\"emotion\":\"friendly\",\"trust_change\":2,\"accepted_gift\":\"none\",\"action\":\"open_mine\"}", 10)),
+                Expectation = "Kiriş kuralı modeli ezer: kapı açılmaz, oyuncuya sebebi gösterilir",
+                Pass = o => o.GotDecision && !o.Opened && Contains(o.LastSystemLine, "kiriş")
             },
         };
 

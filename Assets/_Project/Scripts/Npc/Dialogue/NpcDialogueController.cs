@@ -39,6 +39,7 @@ namespace Gumusdere.Npc.Dialogue
         private Action<bool> setPlayerControls;
         private CancellationTokenSource lifetime;
         private Func<bool> isMineOpen = () => false;
+        private Func<string> extraState = () => null;
         private bool warmedUp;
 
         public NpcPersona Persona => persona;
@@ -79,6 +80,9 @@ namespace Gumusdere.Npc.Dialogue
 
         /// <summary>Maden kapısının açık olup olmadığını promptta göstermek için.</summary>
         public void SetMineStateSource(Func<bool> source) => isMineOpen = source ?? (() => false);
+
+        /// <summary>[DURUM] satırına eklenecek başka oyun bilgisi (örn. madenin ağzındaki destek kirişi sayısı).</summary>
+        public void SetExtraStateSource(Func<string> source) => extraState = source ?? (() => null);
 
         // ------------------------------------------------------------------ Pencere
 
@@ -145,7 +149,7 @@ namespace Gumusdere.Npc.Dialogue
 
         private async Task ProcessAsync(string playerText, CancellationToken token)
         {
-            List<ChatMessage> messages = promptBuilder.Build(history, playerText, Trust.Value, inventory.Snapshot(), giftsReceived, isMineOpen());
+            List<ChatMessage> messages = promptBuilder.Build(history, playerText, Trust.Value, inventory.Snapshot(), giftsReceived, isMineOpen(), extraState());
 
             LlmResult result = await ChatWithRetryAsync(messages, token);
             if (this == null || token.IsCancellationRequested) return;

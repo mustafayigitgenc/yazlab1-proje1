@@ -32,7 +32,8 @@ namespace Gumusdere.Npc.Dialogue
             int trust,
             IReadOnlyDictionary<ItemType, int> inventory,
             IReadOnlyList<ItemType> giftsReceived,
-            bool mineOpen)
+            bool mineOpen,
+            string extraState = null)
         {
             var messages = new List<ChatMessage>(history.Count + 2)
             {
@@ -40,7 +41,7 @@ namespace Gumusdere.Npc.Dialogue
             };
             messages.AddRange(history.Recent());
 
-            string turn = DescribeState(trust, inventory, giftsReceived, mineOpen) + "\n" +
+            string turn = DescribeState(trust, inventory, giftsReceived, mineOpen, extraState) + "\n" +
                           FormatPlayer(playerMessage) + "\n" +
                           Reminder;
             messages.Add(ChatMessage.FromUser(turn));
@@ -53,7 +54,7 @@ namespace Gumusdere.Npc.Dialogue
 
         /// <summary>Tek satırlık güncel durum, örn: [DURUM] Güven: 35/100 | Maden kapısı: kapalı | Envanter: alabalik x1 | Aldığın hediyeler: yok</summary>
         public static string DescribeState(int trust, IReadOnlyDictionary<ItemType, int> inventory,
-            IReadOnlyList<ItemType> giftsReceived, bool mineOpen)
+            IReadOnlyList<ItemType> giftsReceived, bool mineOpen, string extraState = null)
         {
             var sb = new StringBuilder();
             sb.Append("[DURUM] Güven: ").Append(trust).Append("/100");
@@ -88,6 +89,9 @@ namespace Gumusdere.Npc.Dialogue
                     sb.Append(ItemInfo.Key(giftsReceived[i]));
                 }
             }
+
+            // Oyunun eklediği başka durum bilgisi (örn. "Destek kirişi: 2/3")
+            if (!string.IsNullOrEmpty(extraState)) sb.Append(" | ").Append(extraState);
 
             return sb.ToString();
         }

@@ -125,7 +125,8 @@ namespace Gumusdere.Testing
 
             bool mineOpen = scenario.MineOpen;
             // Kapıyı açma izni oyundaki ile aynı kuraldan gelir (güven eşiği + baret ve fener).
-            var open = new RecordingAction("open_mine", t => MineEntryRule.Check(t, persona.OpenThreshold, mineOpen, inventory));
+            int beams = scenario.BeamsPlaced;
+            var open = new RecordingAction("open_mine", t => MineEntryRule.Check(t, persona.OpenThreshold, mineOpen, inventory, beams));
             var close = new RecordingAction("close_mine", _ => mineOpen ? null : "Kapı zaten kapalı");
             var kick = new RecordingAction("kick_out", t => t >= persona.KickThreshold ? $"Güven hâlâ yüksek ({t})" : null);
 
@@ -139,6 +140,7 @@ namespace Gumusdere.Testing
             controller.RegisterAction(NpcAction.CloseMine, close);
             controller.RegisterAction(NpcAction.KickOut, kick);
             controller.SetMineStateSource(() => mineOpen);
+            controller.SetExtraStateSource(() => MineEntryRule.DescribeBeams(beams));
             controller.Trust.Reset(scenario.StartTrust);
             controller.DecisionReceived += (decision, ms) =>
             {

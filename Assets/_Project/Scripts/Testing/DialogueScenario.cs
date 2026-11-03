@@ -14,6 +14,9 @@ namespace Gumusdere.Testing
         public string Expectation;
         public int StartTrust = 35;
         public bool MineOpen;
+
+        /// <summary>Madenin ağzındaki destek kirişi sayısı (varsayılan: tamam).</summary>
+        public int BeamsPlaced = Gumusdere.Mining.MineEntryRule.RequiredBeams;
         public ItemType[] Inventory = Array.Empty<ItemType>();
         public int Runs = 3;
 

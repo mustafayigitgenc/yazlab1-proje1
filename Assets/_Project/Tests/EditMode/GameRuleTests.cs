@@ -112,6 +112,11 @@ namespace Gumusdere.Tests
             StringAssert.Contains("kapalı", state);
             StringAssert.Contains("alabalik x1", state);
             StringAssert.Contains("bogurtlen", state);
+            StringAssert.DoesNotContain("Destek", state);
+
+            string withBeams = PromptBuilder.DescribeState(35, inventory.Snapshot(), null, true, "Destek kirişi: 2/3");
+            StringAssert.Contains("AÇIK", withBeams);
+            StringAssert.EndsWith("| Destek kirişi: 2/3", withBeams);
         }
 
         [Test]
