@@ -5,8 +5,8 @@ namespace Gumusdere.Economy
 {
     /// <summary>
     /// Bakkal Nazmi'nin fiyatları (lira). Zor bulunan şey pahalıdır: balon balığı en zor yakalanan balık,
-    /// en yüksek fiyat onda. Baret + fener toplam 90 lira; bir tarlanın tamamı (12 balkabağı) 72 lira eder,
-    /// yani oyuncu en az bir hasat ve biraz balık ya da mantarla ekipmanı alabilir.
+    /// en yüksek fiyat onda. Baret + fener toplam 140 lira; bir tarlanın tamamı (12 balkabağı) 72 lira eder.
+    /// Köy ilan panosundaki istekler daha çok para verir; oyuncu birkaç isteği yapıp ekipmanı alır.
     /// </summary>
     public static class PriceList
     {
@@ -26,8 +26,8 @@ namespace Gumusdere.Economy
 
         private static readonly Dictionary<ItemType, int> BuyPrices = new()
         {
-            [ItemType.Helmet] = 50,
-            [ItemType.Lantern] = 40
+            [ItemType.Helmet] = 80,
+            [ItemType.Lantern] = 60
         };
 
         /// <summary>Bakkalda satılan ekipman (sırayla).</summary>

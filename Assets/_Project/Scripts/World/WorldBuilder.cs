@@ -127,6 +127,33 @@ namespace Gumusdere.World
             House(zone, new Vector3(29f, 0f, -6f), new Vector3(5f, 2.5f, 4f), Palette.Roof);
             House(zone, new Vector3(21f, 0f, -14f), new Vector3(6f, 2.8f, 4.5f), Palette.RoofBlue);
             BuildShop(zone, new Vector3(17f, 0f, -3f));
+            BuildQuestBoard(zone, new Vector3(4.5f, 0f, 2f));
+        }
+
+        /// <summary>Köy meydanındaki ilan panosu (patikanın doğusunda, oyuncu güneyinden okur).</summary>
+        private void BuildQuestBoard(Transform parent, Vector3 c)
+        {
+            var root = new GameObject("Ilan_Panosu").transform;
+            root.SetParent(parent, false);
+            root.position = c;
+            var body = root.gameObject.AddComponent<BoxCollider>();
+            body.center = new Vector3(0f, 1f, 0f);
+            body.size = new Vector3(2.4f, 2f, 0.3f);
+
+            Shapes.Box("Pano_Direk", root, new Vector3(-1.1f, 1f, 0f), new Vector3(0.15f, 2f, 0.15f), Palette.DarkWood, false);
+            Shapes.Box("Pano_Direk", root, new Vector3(1.1f, 1f, 0f), new Vector3(0.15f, 2f, 0.15f), Palette.DarkWood, false);
+            Shapes.Box("Pano", root, new Vector3(0f, 1.35f, 0f), new Vector3(2.2f, 1.1f, 0.1f), Palette.Wood, false);
+            Shapes.Box("Pano_Cati", root, new Vector3(0f, 2.05f, 0f), new Vector3(2.6f, 0.12f, 0.5f), Palette.Roof, false);
+            float[] xs = { -0.7f, -0.1f, 0.55f, -0.4f, 0.3f };
+            float[] ys = { 1.55f, 1.6f, 1.5f, 1.12f, 1.1f };
+            for (int i = 0; i < xs.Length; i++)
+            {
+                Shapes.Box("Ilan_Kagidi", root, new Vector3(xs[i], ys[i], -0.06f), new Vector3(0.42f, 0.32f, 0.02f), Palette.Wall, false);
+            }
+
+            layout.QuestBoard = root.gameObject.AddComponent<Gumusdere.Village.QuestBoard>();
+            layout.QuestBoard.Initialize(c + new Vector3(0f, 0f, -1.3f));
+            layout.PlayerInteractables.Add(layout.QuestBoard);
         }
 
         /// <summary>Bakkal Nazmi'nin tezgâhı: tezgâh, direkler, tente ve üstünde birkaç ürün. Müşteri güney tarafında durur.</summary>
@@ -329,6 +356,9 @@ namespace Gumusdere.World
             f.Add(MapFeature.At("", 21f, -14f, 6f, 4.5f, Palette.RoofBlue));
             f.Add(MapFeature.At("Köy", 25f, -9f, 0f, 0f, none));
             f.Add(MapFeature.At("Bakkal", 17f, -3f, 3.6f, 2.6f, Palette.Roof));
+            f.Add(MapFeature.At("İlan panosu", 4.5f, 2f, 2.4f, 0.8f, Palette.Wall));
+            f.Add(MapFeature.At("Tomruklar", 23f, 41f, 3f, 1.7f, Palette.Wood));
+            f.Add(MapFeature.At("Kiriş yeri", -6.5f, 69.6f, 3f, 1.2f, Palette.Dirt));
 
             // Mera
             Rect pasture = layout.CowPasture;
@@ -405,6 +435,44 @@ namespace Gumusdere.World
             lanternLight.intensity = 2f;
 
             layout.GuardSpot = new Vector3(3.5f, 0f, 69.5f);
+            BuildBeamJob(zone);
+        }
+
+        /// <summary>
+        /// Destek kirişi görevi: ormanda (nehrin kuzeyi, doğu ormanı) bir tomruk yığını, madenin ağzında kirişlerin
+        /// bırakılacağı yer. Cemal ikisi arasında gidip gelir.
+        /// </summary>
+        private void BuildBeamJob(Transform mineZone)
+        {
+            // Tomruk yığını
+            var pile = new GameObject("Tomruk_Yigini").transform;
+            pile.SetParent(world, false);
+            pile.position = new Vector3(23f, 0f, 41f);
+            var pileBody = pile.gameObject.AddComponent<BoxCollider>();
+            pileBody.center = new Vector3(0f, 0.55f, 0f);
+            pileBody.size = new Vector3(3f, 1.1f, 1.7f);
+            Quaternion lying = Quaternion.Euler(0f, 0f, 90f);
+            Shapes.Cylinder("Tomruk", pile, new Vector3(0f, 0.3f, -0.55f), new Vector3(0.55f, 1.4f, 0.55f), Palette.Wood, false, lying);
+            Shapes.Cylinder("Tomruk", pile, new Vector3(0f, 0.3f, 0f), new Vector3(0.55f, 1.4f, 0.55f), Palette.DarkWood, false, lying);
+            Shapes.Cylinder("Tomruk", pile, new Vector3(0f, 0.3f, 0.55f), new Vector3(0.55f, 1.4f, 0.55f), Palette.Wood, false, lying);
+            Shapes.Cylinder("Tomruk", pile, new Vector3(0f, 0.78f, -0.28f), new Vector3(0.5f, 1.3f, 0.5f), Palette.DarkWood, false, lying);
+            Shapes.Cylinder("Tomruk", pile, new Vector3(0f, 0.78f, 0.28f), new Vector3(0.5f, 1.3f, 0.5f), Palette.Wood, false, lying);
+            layout.Woodpile = pile;
+
+            // Madenin ağzındaki kiriş yeri (kapının batısı)
+            var stock = new GameObject("Kiris_Yeri").transform;
+            stock.SetParent(mineZone, false);
+            stock.position = new Vector3(-6.5f, 0f, 69.6f);
+            Shapes.Box("Kiris_Yeri_Isaret", stock, new Vector3(0f, 0.015f, 0f), new Vector3(3f, 0.03f, 1.2f), Palette.Dirt, false);
+            var placed = new System.Collections.Generic.List<GameObject>();
+            for (int i = 0; i < Gumusdere.Mining.MineEntryRule.RequiredBeams; i++)
+            {
+                placed.Add(Shapes.Box("Destek_Kirisi", stock, new Vector3(0f, 0.14f + i * 0.27f, (i - 1) * 0.1f),
+                    new Vector3(2.6f, 0.26f, 0.26f), Palette.Wood, false));
+            }
+
+            layout.Beams = stock.gameObject.AddComponent<Gumusdere.Mining.BeamHaulJob>();
+            layout.Beams.Initialize(pile, pile.position + new Vector3(0f, 0f, -1.6f), stock.position + new Vector3(0f, 0f, -1.4f), placed);
         }
 
         // ------------------------------------------------------------------ Maden içi (final)

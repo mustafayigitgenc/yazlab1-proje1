@@ -96,6 +96,13 @@ namespace Gumusdere.Spawning
             Shapes.Box("Kova_Sap", can, new Vector3(0f, 0.3f, 0f), new Vector3(0.04f, 0.04f, 0.3f), Palette.Stone, false);
             can.gameObject.SetActive(false);
 
+            // Omuzdaki destek kirişi: sadece kiriş taşıma görevinde görünür (BeamHaulJob açıp kapatır).
+            var beam = new GameObject(Gumusdere.Mining.BeamHaulJob.CarriedBeamName).transform;
+            beam.SetParent(t, false);
+            beam.localPosition = new Vector3(0.3f, 1.25f, 0f);
+            Shapes.Box("Kiris", beam, Vector3.zero, new Vector3(0.22f, 0.22f, 2.4f), Palette.Wood, false);
+            beam.gameObject.SetActive(false);
+
             var agent = root.AddComponent<NavMeshAgent>();
             agent.radius = 0.4f;
             agent.height = 1.8f;

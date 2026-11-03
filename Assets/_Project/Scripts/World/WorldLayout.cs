@@ -49,6 +49,13 @@ namespace Gumusdere.World
         public Gumusdere.Economy.ShopStall Shop;
         public Vector3 ShopkeeperSpot;
 
+        /// <summary>Köy ilan panosu (köylülerin istekleri).</summary>
+        public Gumusdere.Village.QuestBoard QuestBoard;
+
+        /// <summary>Cemal'in kiriş taşıma görevi ve ormandaki tomruk yığını.</summary>
+        public Gumusdere.Mining.BeamHaulJob Beams;
+        public Transform Woodpile;
+
         public Vector3 FishingSpot;
         public Gumusdere.Fishing.FishingSpot Fishing;
 
