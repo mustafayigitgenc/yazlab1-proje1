@@ -6,6 +6,7 @@ namespace Gumusdere.Companion.States
     /// <summary>
     /// Cemal hedefe döner; sensörüyle hedefi gerçekten gördüğünü doğrular, kısa bir süre çalışır
     /// ve nesneyi kullanır. Hedefi göremezse görevi bırakır.
+    /// Çok duraklı görevlerde her durak bitince tekrar "Hedefe git" durumuna döner.
     /// </summary>
     public sealed class CompanionInteractState : IState
     {
@@ -49,7 +50,7 @@ namespace Gumusdere.Companion.States
                 if (companion.Sensor.CanSee(task.Root, task.LookPoint))
                 {
                     working = true;
-                    companion.Speaker?.Say("Hemen hallediyorum...");
+                    if (task is not IMultiStepTask) companion.Speaker?.Say("Hemen hallediyorum...");
                 }
                 else if (lookTimer > LookTimeout)
                 {
@@ -69,7 +70,11 @@ namespace Gumusdere.Companion.States
             }
 
             task.Interact(companion.gameObject);
-            companion.Speaker?.Say("Tamamdır ağam, iş bitti!");
+
+            // Çok duraklı görevse (örn. sulama) sıradaki durağa git; durak kalmadıysa görev biter.
+            if (companion.TryContinueToNextStep()) return;
+
+            if (task is not IMultiStepTask) companion.Speaker?.Say("Tamamdır ağam, iş bitti!");
             companion.CompleteTask();
         }
 

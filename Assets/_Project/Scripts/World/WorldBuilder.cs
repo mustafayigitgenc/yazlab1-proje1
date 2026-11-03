@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Gumusdere.Navigation;
 using UnityEngine;
 
@@ -39,6 +40,7 @@ namespace Gumusdere.World
             BuildMineEntrance();
             BuildMineInterior();
             BuildBorders();
+            BuildMapFeatures();
 
             // Görünmez oyuncu duvarları "Ignore Raycast" katmanında: Cemal'in sensörü onları engel sanmasın.
             foreach (Transform t in layout.PlayerOnlyWalls.GetComponentsInChildren<Transform>(true))
@@ -91,6 +93,7 @@ namespace Gumusdere.World
                     var plot = tile.AddComponent<Gumusdere.Farming.FarmPlot>();
                     plot.Initialize(tile.GetComponent<Renderer>(), zone);
                     layout.PlayerInteractables.Add(plot);
+                    layout.Plots.Add(plot);
                 }
             }
 
@@ -101,9 +104,11 @@ namespace Gumusdere.World
             Fence(zone, new Vector3(4f, 0f, -6f), new Vector3(8f, 0f, -6f));
             Fence(zone, new Vector3(10f, 0f, -6f), new Vector3(14f, 0f, -6f));
 
-            // Kuyu
-            Shapes.Cylinder("Kuyu", zone, new Vector3(-4f, 0.5f, -14f), new Vector3(1.6f, 0.5f, 1.6f), Palette.Stone);
+            // Kuyu: Cemal sulama görevinde kovayı buradan alır (kuyunun kuzey tarafında durur).
+            GameObject well = Shapes.Cylinder("Kuyu", zone, new Vector3(-4f, 0.5f, -14f), new Vector3(1.6f, 0.5f, 1.6f), Palette.Stone);
             Shapes.Cylinder("Kuyu_Su", zone, new Vector3(-4f, 1.01f, -14f), new Vector3(1.2f, 0.01f, 1.2f), Palette.Water, false);
+            layout.Watering = well.AddComponent<Gumusdere.Farming.WateringJob>();
+            layout.Watering.Initialize(layout.Plots, new Vector3(-4f, 0f, -12.5f), new Vector3(9f, 0f, -10f));
 
             Tree(zone, new Vector3(-30f, 0f, -20f), 1.1f);
             Tree(zone, new Vector3(-34f, 0f, -8f), 1.0f, true);
@@ -255,6 +260,73 @@ namespace Gumusdere.World
             {
                 Tree(zone, new Vector3(trees[i, 0], 0f, trees[i, 1]), 0.9f + (i % 3) * 0.15f, i % 2 == 0);
             }
+        }
+
+        // ------------------------------------------------------------------ Harita (M)
+
+        /// <summary>M ile açılan haritanın bölgeleri. Koordinatlar yukarıdaki yapım kodlarıyla aynıdır.</summary>
+        private void BuildMapFeatures()
+        {
+            layout.MapBounds = new Rect(-40f, -26f, 80f, 131f);
+            List<MapFeature> f = layout.MapFeatures;
+            Color none = new(0f, 0f, 0f, 0f);
+
+            // Su ve geçişler
+            f.Add(MapFeature.At("Nehir", 26f, 22f, 28f, 8f, Palette.Water));
+            f.Add(MapFeature.At("", -2f, 22f, 76f, 8f, Palette.Water));
+            f.Add(MapFeature.At("Sığ geçit", -19f, 22f, 4f, 8f, Palette.ShallowWater));
+            f.Add(MapFeature.At("Köprü", 0f, 22f, 4f, 8f, Palette.Wood));
+            f.Add(MapFeature.At("Göl", -20f, 48f, 15f, 12f, Palette.Water, true));
+            f.Add(MapFeature.At("İskele", -11.5f, 48f, 3.6f, 1.6f, Palette.Wood));
+
+            // Patikalar
+            f.Add(MapFeature.At("", 1f, 5f, 2.4f, 25f, Palette.Dirt));
+            f.Add(MapFeature.At("", 0f, 49f, 2.4f, 46f, Palette.Dirt));
+
+            // Çiftlik ve köy
+            f.Add(MapFeature.At("Tarla", 9f, -10f, 10f, 8f, Palette.Soil));
+            f.Add(MapFeature.At("Evin", -14f, -12f, 8f, 6f, Palette.Roof));
+            f.Add(MapFeature.At("Kuyu", -4f, -14f, 2.2f, 2.2f, Palette.Stone, true));
+            f.Add(MapFeature.At("", 22f, 2f, 5f, 4f, Palette.RoofBlue));
+            f.Add(MapFeature.At("", 29f, -6f, 5f, 4f, Palette.Roof));
+            f.Add(MapFeature.At("", 21f, -14f, 6f, 4.5f, Palette.RoofBlue));
+            f.Add(MapFeature.At("Köy", 25f, -4f, 0f, 0f, none));
+
+            // Mera
+            Rect pasture = layout.CowPasture;
+            f.Add(new MapFeature("Mera", pasture, Palette.GrassDark));
+            f.Add(MapFeature.At("Vinç", 6f, 29.5f, 1.6f, 1.6f, Palette.Lever));
+
+            // Orman, çalılar
+            f.Add(MapFeature.At("Orman", -32f, 50f, 0f, 0f, none));
+            f.Add(MapFeature.At("Orman", 30f, 55f, 0f, 0f, none));
+            float[,] trees =
+            {
+                { -36f, 30f }, { -33f, 36f }, { -37f, 43f }, { -34f, 58f }, { -37f, 64f }, { -31f, 68f },
+                { -28f, 38f }, { -27f, 60f }, { -12f, 62f }, { -16f, 66f }, { -8f, 56f },
+                { 26f, 46f }, { 32f, 50f }, { 36f, 44f }, { 29f, 58f }, { 35f, 63f }, { 24f, 66f },
+                { 20f, 36f }, { 33f, 34f }, { 12f, 66f }
+            };
+            for (int i = 0; i < trees.GetLength(0); i++)
+            {
+                f.Add(MapFeature.At("", trees[i, 0], trees[i, 1], 4f, 4f, Palette.Leaf, true));
+            }
+            f.Add(MapFeature.At("Böğürtlen", 14f, 52f, 1.8f, 1.8f, Palette.Berry, true));
+            f.Add(MapFeature.At("", 18f, 57f, 1.8f, 1.8f, Palette.Berry, true));
+            f.Add(MapFeature.At("", 10f, 60f, 1.8f, 1.8f, Palette.Berry, true));
+
+            // Dağ ve maden
+            f.Add(MapFeature.At("", 0f, 92.5f, 80f, 25f, Palette.Rock));
+            f.Add(MapFeature.At("Dağ", -21f, 76f, 38f, 8f, Palette.Rock));
+            f.Add(MapFeature.At("", 21f, 76f, 38f, 8f, Palette.Rock));
+            f.Add(MapFeature.At("", 0f, 76f, 4f, 8f, Palette.CaveFloor));
+            f.Add(MapFeature.At("Maden kapısı", 0f, 72.3f, 4f, 0.8f, Palette.DarkWood));
+            f.Add(MapFeature.At("Maden", 0f, 87f, 24f, 14f, Palette.CaveFloor));
+            f.Add(MapFeature.At("", 0f, 99.5f, 24f, 9f, Palette.CaveFloor));
+            f.Add(MapFeature.At("", -7f, 95f, 11f, 1f, Palette.CaveWall));
+            f.Add(MapFeature.At("", 7f, 95f, 11f, 1f, Palette.CaveWall));
+            f.Add(MapFeature.At("Göçük", 0f, 95f, 3f, 1.6f, Palette.Stone));
+            f.Add(MapFeature.At("Gümüş", 0f, 101.5f, 2.2f, 1.8f, Palette.Silver, true));
         }
 
         // ------------------------------------------------------------------ Maden girişi

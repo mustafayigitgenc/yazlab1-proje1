@@ -7,6 +7,7 @@ namespace Gumusdere.Farming
 {
     /// <summary>
     /// Tek bir tarla karesi. Döngü: Boş → (E) tohum ek → (E) sula → büyür → (E) hasat → Boş.
+    /// Sulamayı oyuncu kendisi de yapabilir, F ile Cemal'e de yaptırabilir (WateringJob).
     /// Hasatta çantaya bir balkabağı girer.
     /// </summary>
     public sealed class FarmPlot : MonoBehaviour, IPlayerInteractable
@@ -21,6 +22,9 @@ namespace Gumusdere.Farming
         private float growStartTime;
 
         public PlotState State { get; private set; } = PlotState.Empty;
+
+        /// <summary>Tohum ekilmiş ama henüz sulanmamış.</summary>
+        public bool NeedsWater => State == PlotState.Planted;
         public Vector3 Position => transform.position;
         public float UseRadius => 1.5f;
 
@@ -62,13 +66,11 @@ namespace Gumusdere.Farming
                     State = PlotState.Planted;
                     sprout.gameObject.SetActive(true);
                     sprout.localScale = new Vector3(0.12f, 0.1f, 0.12f);
-                    context.Info("Tohum ekildi. Şimdi sula.");
+                    context.Info("Tohum ekildi. Kendin sula (E) ya da F ile Cemal'e sulat.");
                     break;
 
                 case PlotState.Planted:
-                    State = PlotState.Growing;
-                    growStartTime = Time.time;
-                    soil.sharedMaterial = MaterialLibrary.Get(Palette.SoilWet);
+                    Water();
                     context.Info($"Sulandı. Balkabağı yaklaşık {GrowDuration:0} saniyede büyür.");
                     break;
 
@@ -79,6 +81,17 @@ namespace Gumusdere.Farming
                     context.Info($"+1 {ItemInfo.DisplayName(ItemType.Pumpkin)}");
                     break;
             }
+        }
+
+        /// <summary>Kareyi sular ve büyümeyi başlatır. Sulanacak durumda değilse false döner.</summary>
+        public bool Water()
+        {
+            if (State != PlotState.Planted) return false;
+
+            State = PlotState.Growing;
+            growStartTime = Time.time;
+            soil.sharedMaterial = MaterialLibrary.Get(Palette.SoilWet);
+            return true;
         }
 
         private void Update()

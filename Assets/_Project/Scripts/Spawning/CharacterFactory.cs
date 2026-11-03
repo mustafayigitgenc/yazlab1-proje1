@@ -62,6 +62,17 @@ namespace Gumusdere.Spawning
             Shapes.Sphere("Baret", t, new Vector3(0f, 1.66f, 0f), new Vector3(0.56f, 0.36f, 0.56f), Palette.Helmet, false);
             Shapes.Box("Baret_Siper", t, new Vector3(0f, 1.62f, 0.22f), new Vector3(0.45f, 0.04f, 0.2f), Palette.Helmet, false);
 
+            // Sulama kovası: sağ elinde; sadece sulama görevinde görünür (WateringJob açıp kapatır).
+            var can = new GameObject(Gumusdere.Farming.WateringJob.CanObjectName).transform;
+            can.SetParent(t, false);
+            can.localPosition = new Vector3(0.48f, 0.55f, 0.18f);
+            Shapes.Cylinder("Kova_Govde", can, Vector3.zero, new Vector3(0.32f, 0.18f, 0.32f), Palette.RoofBlue, false);
+            Shapes.Cylinder("Kova_Su", can, new Vector3(0f, 0.18f, 0f), new Vector3(0.27f, 0.01f, 0.27f), Palette.Water, false);
+            Shapes.Cylinder("Kova_Ibrik", can, new Vector3(0f, 0.08f, 0.22f), new Vector3(0.06f, 0.16f, 0.06f), Palette.RoofBlue, false,
+                Quaternion.Euler(60f, 0f, 0f));
+            Shapes.Box("Kova_Sap", can, new Vector3(0f, 0.3f, 0f), new Vector3(0.04f, 0.04f, 0.3f), Palette.Stone, false);
+            can.gameObject.SetActive(false);
+
             var agent = root.AddComponent<NavMeshAgent>();
             agent.radius = 0.4f;
             agent.height = 1.8f;

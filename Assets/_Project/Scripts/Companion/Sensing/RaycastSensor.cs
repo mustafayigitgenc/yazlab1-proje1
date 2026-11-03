@@ -60,13 +60,17 @@ namespace Gumusdere.Companion.Sensing
             float distance = toTarget.magnitude;
             if (distance < 0.01f) return true;
 
-            if (!Physics.Raycast(eye, toTarget / distance, out RaycastHit hit, distance + 0.5f,
+            // Göz ile bakılan nokta arasına bir ışın atılır (noktaya 15 cm kala durur).
+            // Hiçbir şeye çarpmazsa görüş açık demektir; çarptığı şey hedefin kendisiyse de görüyordur.
+            // Araya başka bir nesne (duvar, ağaç, oyuncu...) girerse hedef görünmüyor sayılır.
+            float length = Mathf.Max(0.01f, distance - 0.15f);
+            if (!Physics.Raycast(eye, toTarget / distance, out RaycastHit hit, length,
                     Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
             {
-                return false;
+                return true;
             }
 
-            return hit.transform == target || hit.transform.IsChildOf(target);
+            return target != null && (hit.transform == target || hit.transform.IsChildOf(target));
         }
     }
 }
