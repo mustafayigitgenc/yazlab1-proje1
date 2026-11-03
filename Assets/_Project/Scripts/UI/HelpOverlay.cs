@@ -45,7 +45,7 @@ namespace Gumusdere.UI
 
         private void DrawHelpPanel()
         {
-            float panelHeight = DebugView.Enabled ? 275f : 125f;
+            float panelHeight = DebugView.Enabled ? 300f : 125f;
             GUILayout.BeginArea(new Rect(12f, 12f, 540f, panelHeight), panelStyle);
             GUILayout.Label("<b>Gümüşdere</b>", textStyle);
             GUILayout.Label("WASD / oklar: yürü    Shift: koş", textStyle);
@@ -69,6 +69,7 @@ namespace Gumusdere.UI
                     GUILayout.Label($"Sensör: en yakın engel {nearest}   Dikkatli mod: {(companion.GoToTargetState.IsCareful ? "açık" : "kapalı")}", textStyle);
                 }
                 GUILayout.Label($"Köprü: {(bridge != null && bridge.IsLowered ? "indi" : "kalkık")}", textStyle);
+                GUILayout.Label("Testler:  F9 ajan testi (30 deneme)   F10 diyalog testi (Ollama)", textStyle);
             }
 
             GUILayout.EndArea();

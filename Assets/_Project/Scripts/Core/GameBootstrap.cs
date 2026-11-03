@@ -9,6 +9,7 @@ using Gumusdere.Npc.Llm;
 using Gumusdere.Npc.Parsing;
 using Gumusdere.Player;
 using Gumusdere.Spawning;
+using Gumusdere.Testing;
 using Gumusdere.UI;
 using Gumusdere.World;
 using System.Collections;
@@ -140,13 +141,21 @@ namespace Gumusdere.Core
 
             var flow = gameObject.AddComponent<GameFlow>();
             var map = gameObject.AddComponent<WorldMapView>();
-            flow.Initialize(stats, setControls, () => !dialogue.IsOpen && !layout.Fishing.Game.IsActive && !map.IsOpen);
+            var agentTest = gameObject.AddComponent<AgentTestRunner>();
+            var dialogueTest = gameObject.AddComponent<DialogueTestRunner>();
+            flow.Initialize(stats, setControls,
+                () => !dialogue.IsOpen && !layout.Fishing.Game.IsActive && !map.IsOpen && !agentTest.IsRunning);
 
             // 11) M ile açılan harita
             map.Initialize(layout, cemal, () => flow.IsPlaying && !dialogue.IsOpen && !layout.Fishing.Game.IsActive);
             map.AddMarker("Sen", player.transform, Palette.Shirt);
             map.AddMarker("Cemal", cemal.transform, Palette.WorkerShirt);
             map.AddMarker("Hüsnü Dayı", dialogue.transform, Palette.Vest);
+
+            // 12) Testler: F9 ajan testi, F10 diyalog testi (sonuçlar TestResults/ klasörüne)
+            agentTest.Initialize(cemal, player.transform, layout.Bridge, setControls,
+                () => flow.IsPlaying && !dialogue.IsOpen && !layout.Fishing.Game.IsActive && !dialogueTest.IsRunning);
+            dialogueTest.Initialize(() => flow.IsPlaying && !dialogue.IsOpen && !agentTest.IsRunning);
             layout.Vein.Mined += () => StartCoroutine(WinAfter(flow, 1.5f));
             gameObject.AddComponent<GameScreensView>().Initialize(flow);
 
