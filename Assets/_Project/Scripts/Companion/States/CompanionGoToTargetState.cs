@@ -10,7 +10,9 @@ namespace Gumusdere.Companion.States
     /// Kararlar:
     ///  - Yol hiç yoksa veya yarımsa (PathPartial/PathInvalid) görevi bırakır.
     ///  - Sensör önünde yakın bir engel görürse yavaşlar.
-    ///  - 3 sn boyunca hedefe yaklaşamazsa yeniden yol hesaplar; 3 denemede olmazsa vazgeçer.
+    ///  - 3 sn içinde 1 m bile yer değiştiremezse (gerçekten takıldıysa) yeniden yol hesaplar; 3 denemede olmazsa vazgeçer.
+    ///    Not: ilerleme konumdan ölçülür; NavMeshAgent.remainingDistance uzun ve çok köşeli yollarda
+    ///    "bilinmiyor" (sonsuz) dönebildiği için takılma kararında kullanılmaz.
     ///  - Hedefe varınca "Kullan" durumuna geçer.
     /// </summary>
     public sealed class CompanionGoToTargetState : IState
@@ -22,13 +24,13 @@ namespace Gumusdere.Companion.States
         private const float CarefulAngle = 35f;
         private const float SensorInterval = 0.1f;
         private const float StuckWindow = 3f;
-        private const float StuckProgress = 0.5f;
+        private const float StuckProgress = 1f;
         private const int MaxRepaths = 3;
 
         private readonly CompanionController companion;
         private float sensorTimer;
         private float stuckTimer;
-        private float bestRemaining;
+        private Vector3 checkpoint;
         private int repathCount;
         private bool announcedWater;
 
@@ -74,14 +76,13 @@ namespace Gumusdere.Companion.States
                 companion.Speaker?.Say("Geçitten geçiyorum, ayaklarım ıslandı!");
             }
 
-            float remaining = agent.remainingDistance;
-            if (remaining <= ArriveDistance)
+            if (HasArrived(agent))
             {
                 companion.Brain.ChangeState(companion.InteractState);
                 return;
             }
 
-            CheckStuck(agent, remaining, deltaTime);
+            CheckStuck(agent, deltaTime);
         }
 
         public void Exit()
@@ -96,7 +97,7 @@ namespace Gumusdere.Companion.States
             agent.isStopped = false;
             agent.speed = NormalSpeed;
             stuckTimer = 0f;
-            bestRemaining = float.MaxValue;
+            checkpoint = companion.transform.position;
 
             if (!agent.SetDestination(companion.CurrentTask.InteractionPoint))
             {
@@ -115,17 +116,29 @@ namespace Gumusdere.Companion.States
             agent.speed = IsCareful ? CarefulSpeed : NormalSpeed;
         }
 
-        private void CheckStuck(NavMeshAgent agent, float remaining, float deltaTime)
+        /// <summary>
+        /// Hedefe vardı mı? remainingDistance biliniyorsa ona, bilinmiyorsa (sonsuz) hedefe düz uzaklığa bakılır.
+        /// </summary>
+        private bool HasArrived(NavMeshAgent agent)
         {
-            if (remaining < bestRemaining - StuckProgress)
-            {
-                bestRemaining = remaining;
-                stuckTimer = 0f;
-                return;
-            }
+            float remaining = agent.remainingDistance;
+            if (!float.IsInfinity(remaining)) return remaining <= ArriveDistance;
 
+            Vector3 d = companion.CurrentTask.InteractionPoint - companion.transform.position;
+            d.y = 0f;
+            return d.magnitude <= ArriveDistance;
+        }
+
+        private void CheckStuck(NavMeshAgent agent, float deltaTime)
+        {
             stuckTimer += deltaTime;
             if (stuckTimer < StuckWindow) return;
+
+            Vector3 moved = companion.transform.position - checkpoint;
+            moved.y = 0f;
+            checkpoint = companion.transform.position;
+            stuckTimer = 0f;
+            if (moved.magnitude >= StuckProgress) return; // ilerliyor
 
             repathCount++;
             if (repathCount > MaxRepaths)
