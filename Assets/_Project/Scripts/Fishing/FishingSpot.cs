@@ -45,11 +45,8 @@ namespace Gumusdere.Fishing
 
             activeContext = context;
             context.SetMovementEnabled(false);
-            game.Begin(
-                biteDelay: Random.Range(1.2f, 3f),
-                zoneStart: Random.Range(0.15f, 0.7f),
-                zoneWidth: 0.18f,
-                needleSpeed: Random.Range(0.9f, 1.4f));
+            FishSpecies fish = FishSpecies.Pick(FishSpecies.Lake, Random.value);
+            game.Begin(fish, biteDelay: Random.Range(1.5f, 3.5f), zoneStart: Random.Range(0.1f, 0.8f));
 
             bobber.gameObject.SetActive(true);
             context.Info("Olta atıldı... Şamandıra batınca BOŞLUK ile çek!");
@@ -96,8 +93,10 @@ namespace Gumusdere.Fishing
 
             if (caught)
             {
-                activeContext.Inventory.Add(ItemType.Trout);
-                activeContext.Info($"Yakaladın! +1 {ItemInfo.DisplayName(ItemType.Trout)}");
+                ItemType caughtItem = game.Fish.Item;
+                activeContext.Inventory.Add(caughtItem);
+                string rare = game.Fish.Weight <= 15 ? " Nadir bir balık!" : "";
+                activeContext.Info($"Yakaladın! +1 {ItemInfo.DisplayName(caughtItem)}.{rare}");
             }
             else
             {

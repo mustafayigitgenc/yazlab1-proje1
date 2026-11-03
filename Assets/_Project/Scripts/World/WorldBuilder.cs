@@ -227,6 +227,22 @@ namespace Gumusdere.World
             layout.PlayerInteractables.Add(Bush(zone, new Vector3(18f, 0f, 57f)));
             layout.PlayerInteractables.Add(Bush(zone, new Vector3(10f, 0f, 60f)));
 
+            // Mantar yerleri (orman içinde, ağaç gövdelerinden uzak)
+            float[,] mushrooms =
+            {
+                { -34f, 33f }, { -30f, 41f }, { -35f, 52f }, { -29f, 63f }, { -14f, 64f },
+                { -10f, 58f }, { -24f, 57f }, { 27f, 49f }, { 31f, 61f }, { 22f, 64f }
+            };
+            for (int i = 0; i < mushrooms.GetLength(0); i++)
+            {
+                var spot = new GameObject("Mantar_Yeri");
+                spot.transform.SetParent(zone, false);
+                spot.transform.localPosition = new Vector3(mushrooms[i, 0], 0f, mushrooms[i, 1]);
+                var mushroom = spot.AddComponent<Gumusdere.Farming.MushroomSpot>();
+                mushroom.Initialize();
+                layout.PlayerInteractables.Add(mushroom);
+            }
+
             // Orman
             float[,] trees =
             {

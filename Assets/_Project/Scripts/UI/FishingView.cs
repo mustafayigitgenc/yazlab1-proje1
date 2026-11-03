@@ -40,8 +40,7 @@ namespace Gumusdere.UI
             }
             else
             {
-                GUI.Label(new Rect(panel.x, bar.y - 36f, panel.width, 28f),
-                    $"ÇEK!  İbre yeşildeyken BOŞLUK  ({game.TimeLeft:0.0} sn)", labelStyle);
+                GUI.Label(new Rect(panel.x, bar.y - 36f, panel.width, 28f), game.Fish.BiteHint, labelStyle);
                 Fill(bar, new Color(0.25f, 0.25f, 0.28f, 0.95f));
                 Fill(new Rect(bar.x + bar.width * game.ZoneStart, bar.y, bar.width * game.ZoneWidth, bar.height),
                     new Color(0.3f, 0.85f, 0.35f, 1f));
@@ -49,7 +48,10 @@ namespace Gumusdere.UI
                 Fill(new Rect(nx - 3f, bar.y - 6f, 6f, bar.height + 12f), game.InZone ? Color.white : new Color(1f, 0.85f, 0.3f));
             }
 
-            GUI.Label(new Rect(panel.x, bar.yMax + 4f, panel.width, 24f), "Esc: vazgeç", labelStyle);
+            string footer = game.Current == FishingMinigame.Phase.Reeling
+                ? $"İbre yeşildeyken BOŞLUK  ·  {game.TimeLeft:0.0} sn  ·  Esc: vazgeç"
+                : "Esc: vazgeç";
+            GUI.Label(new Rect(panel.x, bar.yMax + 4f, panel.width, 24f), footer, labelStyle);
         }
 
         private void Fill(Rect rect, Color color)
