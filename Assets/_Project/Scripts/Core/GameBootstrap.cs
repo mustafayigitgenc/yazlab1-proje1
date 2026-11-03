@@ -208,6 +208,9 @@ namespace Gumusdere.Core
             dialogue.RegisterAction(NpcAction.KickOut, new KickOutAction(guard, persona.KickThreshold));
             dialogue.SetMineStateSource(() => layout.Door.IsOpen);
             dialogue.SetExtraStateSource(() => Gumusdere.Mining.MineEntryRule.DescribeBeams(layout.Beams.Delivered));
+            dialogue.SetRuleHintSource(text => Gumusdere.Mining.MineEntryRule.IsAboutDoor(text)
+                ? Gumusdere.Mining.MineEntryRule.HintForNpc(dialogue.Trust.Value, persona.OpenThreshold, layout.Door.IsOpen, inventory, layout.Beams.Delivered)
+                : null);
             return dialogue;
         }
 

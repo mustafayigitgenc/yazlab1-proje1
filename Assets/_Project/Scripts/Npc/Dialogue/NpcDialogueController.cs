@@ -40,6 +40,7 @@ namespace Gumusdere.Npc.Dialogue
         private CancellationTokenSource lifetime;
         private Func<bool> isMineOpen = () => false;
         private Func<string> extraState = () => null;
+        private Func<string, string> ruleHint = _ => null;
         private bool warmedUp;
 
         public NpcPersona Persona => persona;
@@ -83,6 +84,13 @@ namespace Gumusdere.Npc.Dialogue
 
         /// <summary>[DURUM] satırına eklenecek başka oyun bilgisi (örn. madenin ağzındaki destek kirişi sayısı).</summary>
         public void SetExtraStateSource(Func<string> source) => extraState = source ?? (() => null);
+
+        /// <summary>
+        /// Modelin son mesajına eklenen kesin kural satırı (örn. "[KAPI] Kapıyı şu an AÇAMAZSIN... Eksikler: ...").
+        /// Küçük modeller durumu kendileri yorumlamakta zorlanır; oyun neyin eksik olduğunu hazır söyler.
+        /// </summary>
+        /// <remarks>Kaynağa oyuncunun sözü verilir; satır sadece konuyla ilgiliyse eklenebilir.</remarks>
+        public void SetRuleHintSource(Func<string, string> source) => ruleHint = source ?? (_ => null);
 
         // ------------------------------------------------------------------ Pencere
 
@@ -149,7 +157,7 @@ namespace Gumusdere.Npc.Dialogue
 
         private async Task ProcessAsync(string playerText, CancellationToken token)
         {
-            List<ChatMessage> messages = promptBuilder.Build(history, playerText, Trust.Value, inventory.Snapshot(), giftsReceived, isMineOpen(), extraState());
+            List<ChatMessage> messages = promptBuilder.Build(history, playerText, Trust.Value, inventory.Snapshot(), giftsReceived, isMineOpen(), extraState(), ruleHint(playerText));
 
             LlmResult result = await ChatWithRetryAsync(messages, token);
             if (this == null || token.IsCancellationRequested) return;
@@ -177,8 +185,52 @@ namespace Gumusdere.Npc.Dialogue
                 result = repaired;
             }
 
+            decision = await EnforceDoorRulesAsync(messages, result.Content, decision, token);
+            if (this == null || token.IsCancellationRequested) return;
+
             Apply(playerText, decision);
             DecisionReceived?.Invoke(decision, result.LatencyMs);
+        }
+
+        /// <summary>
+        /// Tutarlılık kontrolü: model kapıyı açtığını/kapattığını söylüyor ama oyun kuralı izin vermiyorsa
+        /// Hüsnü Dayı yalan söylemiş olur. Bu durumda modelden bir kez, kuralın sebebiyle birlikte düzeltilmiş cevap istenir;
+        /// o da olmazsa eylemin kendi hazır açıklaması (örn. "kapıyı henüz açamam: fenerin yok") kullanılır.
+        /// Güven değişimi ve hediye ilk cevaptan korunur (model oyuncunun sözünü zaten değerlendirmişti).
+        /// </summary>
+        private async Task<NpcDecision> EnforceDoorRulesAsync(List<ChatMessage> messages, string rawContent, NpcDecision decision, CancellationToken token)
+        {
+            if (decision.Action != NpcAction.OpenMine && decision.Action != NpcAction.CloseMine) return decision;
+            if (!actions.TryGetValue(decision.Action, out IGameAction handler)) return decision;
+
+            int predictedTrust = Mathf.Clamp(Trust.Value + decision.TrustChange, TrustMeter.Min, TrustMeter.Max);
+            if (handler.CanExecute(predictedTrust, out string reason)) return decision;
+
+            Debug.Log($"[Kural] Model '{handler.Name}' dedi ama kural izin vermiyor ({reason}); cevap düzeltiliyor.");
+            var notes = new List<string>(decision.Warnings) { $"model '{handler.Name}' dedi, kural reddetti ({reason}); cevap düzeltildi" };
+
+            messages.Add(ChatMessage.FromAssistant(rawContent));
+            messages.Add(ChatMessage.FromUser(
+                $"OYUN KURALI: '{handler.Name}' şu an yapılamaz. Sebep: {reason} " +
+                "Kapıyı açtığını, kapattığını ya da madene girilebileceğini SÖYLEME. Oyuncunun son sözüne bu duruma uygun, " +
+                "kısa bir cevap ver ve neyin eksik olduğunu söyle. action none olsun."));
+            LlmResult repaired = await client.ChatAsync(messages, NpcResponseParser.JsonSchema, token);
+            if (this == null || token.IsCancellationRequested) return decision;
+
+            if (repaired.Success && parser.TryParse(repaired.Content, out NpcDecision fixedDecision, out _) && fixedDecision.Action == NpcAction.None)
+            {
+                return new NpcDecision(fixedDecision.Reply, fixedDecision.Emotion, decision.TrustChange, decision.AcceptedGift,
+                    NpcAction.None, fixedDecision.RawJson, notes);
+            }
+
+            string reply = handler is IExplainableAction explainable
+                ? explainable.ExplainRefusal(predictedTrust)
+                : "Kusura bakma evlat, şimdilik bunu yapamam.";
+            notes.Add("model düzeltemedi; hazır açıklama kullanıldı");
+            string gift = decision.AcceptedGift.HasValue ? ItemInfo.Key(decision.AcceptedGift.Value) : "none";
+            string json = "{\"reply\":" + JsonText.Quote(reply) + ",\"emotion\":\"neutral\",\"trust_change\":" +
+                          JsonText.Number(decision.TrustChange) + ",\"accepted_gift\":\"" + gift + "\",\"action\":\"none\"}";
+            return new NpcDecision(reply, NpcEmotion.Neutral, decision.TrustChange, decision.AcceptedGift, NpcAction.None, json, notes);
         }
 
         private async Task<LlmResult> ChatWithRetryAsync(List<ChatMessage> messages, CancellationToken token)

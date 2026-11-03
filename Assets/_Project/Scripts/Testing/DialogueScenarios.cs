@@ -8,7 +8,7 @@ namespace Gumusdere.Testing
     /// <summary>
     /// Diyalog testi senaryoları.
     ///   D1-D12: gerçek yerel model (Ollama) ile, her biri 3 kez. Modelin davranışı + oyun kuralları birlikte ölçülür.
-    ///   H1-H12: hata ve kural senaryoları. Sunucu kapalı / zaman aşımı / bozuk JSON gibi durumlar
+    ///   H1-H13: hata ve kural senaryoları. Sunucu kapalı / zaman aşımı / bozuk JSON gibi durumlar
     ///           sahte istemciyle her seferinde aynı şekilde üretilir; oyunun çökmediği ve durumun bozulmadığı kontrol edilir.
     /// </summary>
     public static class DialogueScenarios
@@ -202,8 +202,9 @@ namespace Gumusdere.Testing
                 PlayerText = "Kapıyı aç dayı",
                 ClientFactory = () => new FakeLlmClient(LlmResult.Ok(
                     "{\"reply\":\"Peki, aç bakalım.\",\"emotion\":\"neutral\",\"trust_change\":5,\"accepted_gift\":\"none\",\"action\":\"open_mine\"}", 10)),
-                Expectation = "Oyun kuralı (güven ≥ 70) modeli ezer: kapı açılmaz",
-                Pass = o => o.GotDecision && o.LlmAction == NpcAction.OpenMine && !o.Opened
+                Expectation = "Kural (güven ≥ 70) modeli ezer: kapı açılmaz, model düzeltemeyince dayı 'açamam' der",
+                Pass = o => o.GotDecision && !o.Opened && o.LlmAction == NpcAction.None && o.LlmCalls == 2 &&
+                            Contains(o.Decision.Reply, "açamam") && Contains(o.Decision.Reply, "güven")
             },
             new DialogueScenario
             {
@@ -211,8 +212,8 @@ namespace Gumusdere.Testing
                 PlayerText = "Kapıyı aç dayı",
                 ClientFactory = () => new FakeLlmClient(LlmResult.Ok(
                     "{\"reply\":\"Tamam evlat, al anahtarı.\",\"emotion\":\"friendly\",\"trust_change\":2,\"accepted_gift\":\"none\",\"action\":\"open_mine\"}", 10)),
-                Expectation = "Baret/fener kuralı modeli ezer: kapı açılmaz, oyuncuya sebebi gösterilir",
-                Pass = o => o.GotDecision && !o.Opened && Contains(o.LastSystemLine, "baret")
+                Expectation = "Baret/fener kuralı modeli ezer: kapı açılmaz, dayı neyin eksik olduğunu söyler",
+                Pass = o => o.GotDecision && !o.Opened && Contains(o.Decision.Reply, "baret") && Contains(o.Decision.Reply, "fener")
             },
             new DialogueScenario
             {
@@ -221,8 +222,18 @@ namespace Gumusdere.Testing
                 PlayerText = "Kapıyı aç dayı",
                 ClientFactory = () => new FakeLlmClient(LlmResult.Ok(
                     "{\"reply\":\"Tamam evlat, al anahtarı.\",\"emotion\":\"friendly\",\"trust_change\":2,\"accepted_gift\":\"none\",\"action\":\"open_mine\"}", 10)),
-                Expectation = "Kiriş kuralı modeli ezer: kapı açılmaz, oyuncuya sebebi gösterilir",
-                Pass = o => o.GotDecision && !o.Opened && Contains(o.LastSystemLine, "kiriş")
+                Expectation = "Kiriş kuralı modeli ezer: kapı açılmaz, dayı kirişlerin eksik olduğunu söyler",
+                Pass = o => o.GotDecision && !o.Opened && Contains(o.Decision.Reply, "kiriş")
+            },
+            new DialogueScenario
+            {
+                Id = "H13", Title = "Model 'kapıyı açtım' diyor, düzeltme isteğiyle tutarlı cevap veriyor", Runs = 1, StartTrust = 40,
+                PlayerText = "Kapıyı aç dayı",
+                ClientFactory = () => new FakeLlmClient(
+                    LlmResult.Ok("{\"reply\":\"Kapıyı açtım evlat, gir bakalım.\",\"emotion\":\"friendly\",\"trust_change\":1,\"accepted_gift\":\"none\",\"action\":\"open_mine\"}", 10),
+                    LlmResult.Ok("{\"reply\":\"Daha olmaz evlat, sana henüz güvenmiyorum.\",\"emotion\":\"neutral\",\"trust_change\":0,\"accepted_gift\":\"none\",\"action\":\"none\"}", 10)),
+                Expectation = "Tutarsız cevap yakalanır, modelden düzeltme istenir ve ikinci cevap kullanılır",
+                Pass = o => o.GotDecision && !o.Opened && o.LlmCalls == 2 && o.Decision.Reply == "Daha olmaz evlat, sana henüz güvenmiyorum."
             },
         };
 

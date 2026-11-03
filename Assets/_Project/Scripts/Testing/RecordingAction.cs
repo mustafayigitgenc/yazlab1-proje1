@@ -8,16 +8,21 @@ namespace Gumusdere.Testing
     /// uygular (OpenMineAction: güven ≥ 70, KickOutAction: güven &lt; 25) ama dünyayı değiştirmez;
     /// sadece "çalıştırıldı mı" bilgisini kaydeder.
     /// </summary>
-    public sealed class RecordingAction : IGameAction
+    public sealed class RecordingAction : IExplainableAction
     {
         private readonly Func<int, string> rule;
+        private readonly Func<int, string> explain;
 
         /// <param name="rule">Güvene bakıp izin yoksa sebebi, izin varsa null döndürür.</param>
-        public RecordingAction(string name, Func<int, string> rule)
+        /// <param name="explain">Reddedilince NPC'nin söyleyeceği hazır cümle (gerçek eylemdeki gibi).</param>
+        public RecordingAction(string name, Func<int, string> rule, Func<int, string> explain = null)
         {
             Name = name;
             this.rule = rule;
+            this.explain = explain;
         }
+
+        public string ExplainRefusal(int trust) => explain?.Invoke(trust) ?? "Kusura bakma evlat, şimdilik bunu yapamam.";
 
         public string Name { get; }
         public bool Executed { get; private set; }

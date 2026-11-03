@@ -99,6 +99,36 @@ namespace Gumusdere.Tests
         }
 
         [Test]
+        public void MadenKurali_ModeleVeOyuncuyaEksikleriSoyler()
+        {
+            inventory.Add(ItemType.Helmet);
+            string hint = MineEntryRule.HintForNpc(40, 70, false, inventory, 1);
+            StringAssert.Contains("AÇAMAZSIN", hint);
+            StringAssert.Contains("40/70", hint);
+            StringAssert.Contains("feneri yok", hint);
+            StringAssert.DoesNotContain("bareti yok", hint);
+            StringAssert.Contains("1/3", hint);
+
+            string explain = MineEntryRule.ExplainToPlayer(40, 70, false, inventory, 1);
+            StringAssert.StartsWith("Kusura bakma evlat, kapıyı henüz açamam", explain);
+            StringAssert.Contains("fenerin yok", explain);
+
+            inventory.Add(ItemType.Lantern);
+            StringAssert.Contains("open_mine yaz", MineEntryRule.HintForNpc(75, 70, false, inventory, 3));
+            StringAssert.Contains("close_mine", MineEntryRule.HintForNpc(75, 70, true, inventory, 3));
+        }
+
+        [TestCase("Kapıyı aç dayı", true)]
+        [TestCase("MADENE girmek istiyorum", true)]
+        [TestCase("anahtarı ver", true)]
+        [TestCase("Merhaba dayı, nasılsın?", false)]
+        [TestCase("Sana alabalık getirdim", false)]
+        public void KapiKonusu_Taninir(string text, bool expected)
+        {
+            Assert.AreEqual(expected, MineEntryRule.IsAboutDoor(text));
+        }
+
+        [Test]
         public void IlanPanosu_TeslimEdinceEsyaDuserOdulGelir()
         {
             var book = new QuestBook(inventory, wallet, QuestBook.GumusdereQuests());

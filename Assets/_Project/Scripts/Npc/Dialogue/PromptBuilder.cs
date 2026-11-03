@@ -33,7 +33,8 @@ namespace Gumusdere.Npc.Dialogue
             IReadOnlyDictionary<ItemType, int> inventory,
             IReadOnlyList<ItemType> giftsReceived,
             bool mineOpen,
-            string extraState = null)
+            string extraState = null,
+            string ruleHint = null)
         {
             var messages = new List<ChatMessage>(history.Count + 2)
             {
@@ -43,6 +44,7 @@ namespace Gumusdere.Npc.Dialogue
 
             string turn = DescribeState(trust, inventory, giftsReceived, mineOpen, extraState) + "\n" +
                           FormatPlayer(playerMessage) + "\n" +
+                          (string.IsNullOrEmpty(ruleHint) ? "" : ruleHint + "\n") +
                           Reminder;
             messages.Add(ChatMessage.FromUser(turn));
             return messages;
