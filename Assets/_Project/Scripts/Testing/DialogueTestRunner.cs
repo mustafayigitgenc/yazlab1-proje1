@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Gumusdere.Items;
+using Gumusdere.Mining;
 using Gumusdere.Npc.Dialogue;
 using Gumusdere.Npc.Llm;
 using Gumusdere.Npc.Parsing;
@@ -123,8 +124,8 @@ namespace Gumusdere.Testing
             foreach (ItemType item in scenario.Inventory) inventory.Add(item);
 
             bool mineOpen = scenario.MineOpen;
-            var open = new RecordingAction("open_mine", t =>
-                mineOpen ? "Kapı zaten açık" : t < persona.OpenThreshold ? $"Güven yetersiz ({t} < {persona.OpenThreshold})" : null);
+            // Kapıyı açma izni oyundaki ile aynı kuraldan gelir (güven eşiği + baret ve fener).
+            var open = new RecordingAction("open_mine", t => MineEntryRule.Check(t, persona.OpenThreshold, mineOpen, inventory));
             var close = new RecordingAction("close_mine", _ => mineOpen ? null : "Kapı zaten kapalı");
             var kick = new RecordingAction("kick_out", t => t >= persona.KickThreshold ? $"Güven hâlâ yüksek ({t})" : null);
 

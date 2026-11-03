@@ -30,7 +30,7 @@ namespace Gumusdere.Npc.Parsing
         private static string BuildSchema()
         {
             var gifts = new System.Text.StringBuilder("\"none\"");
-            foreach (ItemType type in ItemInfo.All) gifts.Append(",\"").Append(ItemInfo.Key(type)).Append('"');
+            foreach (ItemType type in ItemInfo.Giftable) gifts.Append(",\"").Append(ItemInfo.Key(type)).Append('"');
 
             return "{\"type\":\"object\",\"properties\":{" +
                    "\"reply\":{\"type\":\"string\"}," +
@@ -233,7 +233,12 @@ namespace Gumusdere.Npc.Parsing
             string key = Normalize(value);
             if (key == "" || key == "none") return null;
 
-            if (ItemInfo.TryParseKey(key, out ItemType type)) return type;
+            if (ItemInfo.TryParseKey(key, out ItemType type))
+            {
+                if (!ItemInfo.IsTool(type)) return type;
+                warnings.Add($"accepted_gift '{value}' ekipman, hediye edilemez → none");
+                return null;
+            }
 
             warnings.Add($"accepted_gift '{value}' tanınmadı → none");
             return null;

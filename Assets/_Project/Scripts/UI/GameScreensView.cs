@@ -39,7 +39,7 @@ namespace Gumusdere.UI
         private void DrawTitle(float w, float h)
         {
             Fill(new Rect(0f, 0f, w, h), new Color(0.05f, 0.04f, 0.03f, 0.72f));
-            Rect panel = Centered(w, h, PanelWidth, 470f);
+            Rect panel = Centered(w, h, PanelWidth, 440f);
 
             GUILayout.BeginArea(panel);
             GUILayout.Label("Gümüşdere", titleStyle);
@@ -79,7 +79,7 @@ namespace Gumusdere.UI
         private void DrawVictory(float w, float h)
         {
             Fill(new Rect(0f, 0f, w, h), new Color(0.06f, 0.05f, 0.02f, 0.7f));
-            Rect panel = Centered(w, h, PanelWidth, 440f);
+            Rect panel = Centered(w, h, PanelWidth, 470f);
             GameStats s = flow.Stats;
             int minutes = (int)(s.ElapsedSeconds / 60f);
             int seconds = (int)(s.ElapsedSeconds % 60f);
@@ -97,6 +97,7 @@ namespace Gumusdere.UI
                 (s.CompanionTasksFailed > 0 ? $"  (yarım kalan: {s.CompanionTasksFailed})" : "") + "\n" +
                 $"Toplanan eşyalar: <b>{s.ItemsCollected}</b>\n" +
                 $"Hüsnü Dayı'ya verilen hediyeler: <b>{s.GiftsGiven}</b>\n" +
+                $"Bakkalda kazanılan para: <b>{s.MoneyEarned} lira</b>\n" +
                 $"Hüsnü Dayı ile konuşma sayısı: <b>{s.NpcReplies}</b>", textStyle);
             GUILayout.Space(20f);
             if (GUILayout.Button("Tekrar oyna", buttonStyle, GUILayout.Height(44f))) flow.Restart();

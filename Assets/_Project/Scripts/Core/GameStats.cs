@@ -15,7 +15,8 @@ namespace Gumusdere.Core
         public int CompanionTasksDone { get; set; }
         public int CompanionTasksFailed { get; set; }
         public int ItemsCollected { get; private set; }
-        public int GiftsGiven { get; private set; }
+        public int GiftsGiven { get; set; }
+        public int MoneyEarned { get; set; }
         public int NpcReplies { get; set; }
 
         public float ElapsedSeconds => running ? Time.time - startTime : endTime - startTime;
@@ -33,7 +34,7 @@ namespace Gumusdere.Core
             running = false;
         }
 
-        /// <summary>Çantadaki artışları "toplandı", azalışları "hediye edildi" olarak sayar.</summary>
+        /// <summary>Çantadaki artışları "toplandı" olarak sayar (bakkaldan alınan ekipman hariç). Hediyeler ayrıca sayılır.</summary>
         public void Track(IInventory inventory)
         {
             inventory.Changed += (type, newCount) =>
@@ -42,8 +43,7 @@ namespace Gumusdere.Core
                 int delta = newCount - old;
                 lastCounts[type] = newCount;
 
-                if (delta > 0) ItemsCollected += delta;
-                else if (delta < 0) GiftsGiven += -delta;
+                if (delta > 0 && !ItemInfo.IsTool(type)) ItemsCollected += delta;
             };
         }
     }

@@ -103,6 +103,15 @@ namespace Gumusdere.Tests
             Assert.AreEqual(3, d.Warnings.Count);
         }
 
+        [TestCase("baret")]
+        [TestCase("fener")]
+        public void Ekipman_HediyeOlarakKabulEdilmez(string key)
+        {
+            Assert.IsTrue(parser.TryParse(Json(gift: key), out NpcDecision d, out _));
+            Assert.IsNull(d.AcceptedGift);
+            Assert.IsNotEmpty(d.Warnings);
+        }
+
         [TestCase("OPEN_MINE", NpcAction.OpenMine)]
         [TestCase(" close_mine ", NpcAction.CloseMine)]
         [TestCase("kick_out", NpcAction.KickOut)]
@@ -127,10 +136,12 @@ namespace Gumusdere.Tests
         [Test]
         public void JsonSemasi_TumEsyaAnahtarlariniIcerir()
         {
-            foreach (ItemType item in ItemInfo.All)
+            foreach (ItemType item in ItemInfo.Giftable)
             {
                 StringAssert.Contains("\"" + ItemInfo.Key(item) + "\"", NpcResponseParser.JsonSchema);
             }
+            StringAssert.DoesNotContain("\"baret\"", NpcResponseParser.JsonSchema);
+            StringAssert.DoesNotContain("\"fener\"", NpcResponseParser.JsonSchema);
             StringAssert.Contains("open_mine", NpcResponseParser.JsonSchema);
             StringAssert.Contains("close_mine", NpcResponseParser.JsonSchema);
             StringAssert.Contains("kick_out", NpcResponseParser.JsonSchema);

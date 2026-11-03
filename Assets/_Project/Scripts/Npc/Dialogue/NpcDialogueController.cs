@@ -54,6 +54,9 @@ namespace Gumusdere.Npc.Dialogue
         /// <summary>Başarılı her karar (karar, gecikme ms). Testler ve loglar için.</summary>
         public event Action<NpcDecision, long> DecisionReceived;
 
+        /// <summary>Hediye oyun kurallarından geçip gerçekten verildi (eşya, güvene etkisi).</summary>
+        public event Action<ItemType, int> GiftAccepted;
+
         public void Initialize(ILLMClient llmClient, IResponseParser<NpcDecision> responseParser, NpcPersona npcPersona,
             IInventory playerInventory, ISpeaker speaker, Action<bool> controlsSetter)
         {
@@ -248,6 +251,7 @@ namespace Gumusdere.Npc.Dialogue
             int effect = persona.Gifts.Receive(gift);
             Trust.Apply(effect);
             giftsReceived.Add(gift);
+            GiftAccepted?.Invoke(gift, effect);
 
             string feeling = taste switch
             {
@@ -272,6 +276,8 @@ namespace Gumusdere.Npc.Dialogue
             if (!handler.CanExecute(Trust.Value, out string reason))
             {
                 Debug.Log($"[Kural] '{handler.Name}' istendi ama oyun kuralı reddetti: {reason}");
+                // Kapıyı açma isteği reddedildiyse oyuncu nedenini görsün (örn. baret ve fener eksik).
+                if (action == NpcAction.OpenMine) AddLine(DialogueSpeaker.System, $"Kapı açılmadı. {reason}");
                 return false;
             }
 

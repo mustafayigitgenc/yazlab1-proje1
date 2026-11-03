@@ -1,4 +1,5 @@
 using Gumusdere.Companion;
+using Gumusdere.Economy;
 using Gumusdere.Interaction;
 using Gumusdere.Items;
 using Gumusdere.Navigation;
@@ -106,6 +107,11 @@ namespace Gumusdere.Core
             };
             var context = new PlayerContext(player.gameObject, inventory, log, setControls);
             interactor.Initialize(context, layout.PlayerInteractables);
+            player.gameObject.AddComponent<PlayerEquipmentView>().Initialize(inventory);
+
+            // 7b) Para ve bakkal Nazmi: ürün sat, baret ve fener al
+            var wallet = new Wallet(PriceList.StartMoney);
+            ShopView shopView = SetUpShop(layout, characters, inventory, wallet, setControls, log);
 
             // 8) Hüsnü Dayı: yerel LLM (Ollama) ile konuşan NPC
             NpcDialogueController dialogue = SetUpGuard(layout, characters, player.transform, inventory, setControls, interactor);
@@ -127,7 +133,7 @@ namespace Gumusdere.Core
 
             // 9) Arayüz
             gameObject.AddComponent<HelpOverlay>().Initialize(cemal, commands, interactor, layout.Bridge);
-            gameObject.AddComponent<InventoryView>().Initialize(inventory);
+            gameObject.AddComponent<InventoryView>().Initialize(inventory, wallet);
             gameObject.AddComponent<FishingView>().Initialize(layout.Fishing);
             gameObject.AddComponent<DialogueView>().Initialize(dialogue, log);
             gameObject.AddComponent<LlmStatusIndicator>().Initialize(dialogue);
@@ -135,6 +141,8 @@ namespace Gumusdere.Core
             // 10) Oyun akışı: başlangıç → oyun ⇄ duraklatma → bitiş
             var stats = new GameStats();
             stats.Track(inventory);
+            wallet.Changed += (before, after) => { if (after > before) stats.MoneyEarned += after - before; };
+            dialogue.GiftAccepted += (item, effect) => stats.GiftsGiven++;
             cemal.TaskSucceeded += (taskName, seconds) => stats.CompanionTasksDone++;
             cemal.TaskFailed += (taskName, reason) => stats.CompanionTasksFailed++;
             dialogue.DecisionReceived += (decision, latencyMs) => stats.NpcReplies++;
@@ -144,18 +152,18 @@ namespace Gumusdere.Core
             var agentTest = gameObject.AddComponent<AgentTestRunner>();
             var dialogueTest = gameObject.AddComponent<DialogueTestRunner>();
             flow.Initialize(stats, setControls,
-                () => !dialogue.IsOpen && !layout.Fishing.Game.IsActive && !map.IsOpen && !agentTest.IsRunning);
+                () => !dialogue.IsOpen && !layout.Fishing.Game.IsActive && !map.IsOpen && !shopView.IsOpen && !agentTest.IsRunning);
 
             // 11) M ile açılan harita
-            map.Initialize(layout, cemal, () => flow.IsPlaying && !dialogue.IsOpen && !layout.Fishing.Game.IsActive);
+            map.Initialize(layout, cemal, () => flow.IsPlaying && !dialogue.IsOpen && !layout.Fishing.Game.IsActive && !shopView.IsOpen);
             map.AddMarker("Sen", player.transform, Palette.Shirt);
             map.AddMarker("Cemal", cemal.transform, Palette.WorkerShirt);
             map.AddMarker("Hüsnü Dayı", dialogue.transform, Palette.Vest);
 
             // 12) Testler: F9 ajan testi, F10 diyalog testi (sonuçlar TestResults/ klasörüne)
             agentTest.Initialize(cemal, player.transform, layout.Bridge, setControls,
-                () => flow.IsPlaying && !dialogue.IsOpen && !layout.Fishing.Game.IsActive && !dialogueTest.IsRunning);
-            dialogueTest.Initialize(() => flow.IsPlaying && !dialogue.IsOpen && !agentTest.IsRunning);
+                () => flow.IsPlaying && !dialogue.IsOpen && !layout.Fishing.Game.IsActive && !shopView.IsOpen && !dialogueTest.IsRunning);
+            dialogueTest.Initialize(() => flow.IsPlaying && !dialogue.IsOpen && !shopView.IsOpen && !agentTest.IsRunning);
             layout.Vein.Mined += () => StartCoroutine(WinAfter(flow, 1.5f));
             gameObject.AddComponent<GameScreensView>().Initialize(flow);
 
@@ -180,11 +188,25 @@ namespace Gumusdere.Core
             guard.Initialize(dialogue, player);
             interactor.Register(guard);
 
-            dialogue.RegisterAction(NpcAction.OpenMine, new OpenMineAction(layout.Door, persona.OpenThreshold));
+            dialogue.RegisterAction(NpcAction.OpenMine, new OpenMineAction(layout.Door, persona.OpenThreshold, inventory));
             dialogue.RegisterAction(NpcAction.CloseMine, new CloseMineAction(layout.Door));
             dialogue.RegisterAction(NpcAction.KickOut, new KickOutAction(guard, persona.KickThreshold));
             dialogue.SetMineStateSource(() => layout.Door.IsOpen);
             return dialogue;
+        }
+
+        private ShopView SetUpShop(WorldLayout layout, Transform parent, IInventory inventory, IWallet wallet,
+            System.Action<bool> setControls, IMessageLog log)
+        {
+            GameObject nazmi = CharacterFactory.CreateShopkeeperBody(parent, layout.ShopkeeperSpot, 180f);
+            navMesh.Ignore(nazmi.transform);
+            var speech = nazmi.AddComponent<SpeechBubble>();
+            speech.Initialize("Bakkal Nazmi", Palette.RoofBlue, log);
+
+            var view = gameObject.AddComponent<ShopView>();
+            view.Initialize(new Shop(inventory, wallet), setControls, speech, log);
+            layout.Shop.Requested += view.Open;
+            return view;
         }
 
         private static IEnumerator WinAfter(GameFlow flow, float seconds)

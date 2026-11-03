@@ -7,8 +7,8 @@ namespace Gumusdere.Testing
 {
     /// <summary>
     /// Diyalog testi senaryoları.
-    ///   D1-D10: gerçek yerel model (Ollama) ile, her biri 3 kez. Modelin davranışı + oyun kuralları birlikte ölçülür.
-    ///   H1-H10: hata ve kural senaryoları. Sunucu kapalı / zaman aşımı / bozuk JSON gibi durumlar
+    ///   D1-D11: gerçek yerel model (Ollama) ile, her biri 3 kez. Modelin davranışı + oyun kuralları birlikte ölçülür.
+    ///   H1-H11: hata ve kural senaryoları. Sunucu kapalı / zaman aşımı / bozuk JSON gibi durumlar
     ///           sahte istemciyle her seferinde aynı şekilde üretilir; oyunun çökmediği ve durumun bozulmadığı kontrol edilir.
     /// </summary>
     public static class DialogueScenarios
@@ -58,11 +58,19 @@ namespace Gumusdere.Testing
             },
             new DialogueScenario
             {
-                Id = "D6", Title = "Yüksek güvenle kapı isteği",
-                StartTrust = 80,
+                Id = "D6", Title = "Yüksek güven + baret ve fener ile kapı isteği",
+                StartTrust = 80, Inventory = new[] { ItemType.Helmet, ItemType.Lantern },
                 PlayerText = "Dayı, artık birbirimizi iyi tanıyoruz. Madenin kapısını açar mısın? Söz, dikkatli olacağım.",
                 Expectation = "action=open_mine, kural izin verir, kapı açılır",
                 Pass = o => o.Opened
+            },
+            new DialogueScenario
+            {
+                Id = "D11", Title = "Yüksek güven ama baret ve fener yok",
+                StartTrust = 80,
+                PlayerText = "Dayı, artık birbirimizi iyi tanıyoruz. Madenin kapısını açar mısın?",
+                Expectation = "Kapı açılmaz; dayı baret ve fener almasını söyler",
+                Pass = o => o.GotDecision && !o.Opened
             },
             new DialogueScenario
             {
@@ -90,7 +98,7 @@ namespace Gumusdere.Testing
             new DialogueScenario
             {
                 Id = "D10", Title = "Açık kapıyı kapattırma",
-                StartTrust = 75, MineOpen = true,
+                StartTrust = 75, MineOpen = true, Inventory = new[] { ItemType.Helmet, ItemType.Lantern },
                 PlayerText = "Dayı ben madendeki işimi bitirdim, kapıyı kapatabilirsin artık.",
                 Expectation = "action=close_mine, kapı kapanır",
                 Pass = o => o.Closed
@@ -188,6 +196,15 @@ namespace Gumusdere.Testing
                     "{\"reply\":\"Peki, aç bakalım.\",\"emotion\":\"neutral\",\"trust_change\":5,\"accepted_gift\":\"none\",\"action\":\"open_mine\"}", 10)),
                 Expectation = "Oyun kuralı (güven ≥ 70) modeli ezer: kapı açılmaz",
                 Pass = o => o.GotDecision && o.LlmAction == NpcAction.OpenMine && !o.Opened
+            },
+            new DialogueScenario
+            {
+                Id = "H11", Title = "Güven yüksek, model open_mine diyor ama ekipman yok", Runs = 1, StartTrust = 85,
+                PlayerText = "Kapıyı aç dayı",
+                ClientFactory = () => new FakeLlmClient(LlmResult.Ok(
+                    "{\"reply\":\"Tamam evlat, al anahtarı.\",\"emotion\":\"friendly\",\"trust_change\":2,\"accepted_gift\":\"none\",\"action\":\"open_mine\"}", 10)),
+                Expectation = "Baret/fener kuralı modeli ezer: kapı açılmaz, oyuncuya sebebi gösterilir",
+                Pass = o => o.GotDecision && !o.Opened && Contains(o.LastSystemLine, "baret")
             },
         };
 
