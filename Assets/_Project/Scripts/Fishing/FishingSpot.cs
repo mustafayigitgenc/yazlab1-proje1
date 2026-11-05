@@ -17,8 +17,8 @@ namespace Gumusdere.Fishing
 
         private readonly FishingMinigame game = new();
         private PlayerContext activeContext;
-        private Transform bobber;
-        private Vector3 bobberRest;
+        private FishingRig rig;
+        private bool biteShown;
         private float readyTime;
 
         public FishingMinigame Game => game;
@@ -27,10 +27,8 @@ namespace Gumusdere.Fishing
 
         public void Initialize(Vector3 waterPoint)
         {
-            bobberRest = waterPoint;
-            bobber = Shapes.Sphere("Samandira", transform, Vector3.zero, Vector3.one * 0.22f, Palette.Lever, false).transform;
-            bobber.position = bobberRest;
-            bobber.gameObject.SetActive(false);
+            rig = gameObject.AddComponent<FishingRig>();
+            rig.Initialize(waterPoint);
         }
 
         public string GetPrompt(PlayerContext context)
@@ -48,7 +46,8 @@ namespace Gumusdere.Fishing
             FishSpecies fish = FishSpecies.Pick(FishSpecies.Lake, Random.value);
             game.Begin(fish, biteDelay: Random.Range(1.5f, 3.5f), zoneStart: Random.Range(0.1f, 0.8f));
 
-            bobber.gameObject.SetActive(true);
+            biteShown = false;
+            rig.BeginCast(context.Player.transform);
             context.Info("Olta atıldı... Şamandıra batınca BOŞLUK ile çek!");
         }
 
@@ -57,7 +56,11 @@ namespace Gumusdere.Fishing
             if (!game.IsActive) return;
 
             game.Tick(Time.deltaTime);
-            AnimateBobber();
+            if (!biteShown && game.Current == FishingMinigame.Phase.Reeling)
+            {
+                biteShown = true;
+                rig.Bite();
+            }
 
             Keyboard kb = Keyboard.current;
             if (kb == null) return;
@@ -78,17 +81,12 @@ namespace Gumusdere.Fishing
             }
         }
 
-        private void AnimateBobber()
-        {
-            float bob = Mathf.Sin(Time.time * 4f) * 0.03f;
-            float dip = game.Current == FishingMinigame.Phase.Reeling ? -0.12f : 0f;
-            bobber.position = bobberRest + new Vector3(0f, bob + dip, 0f);
-        }
-
         private void Finish(bool caught, string failMessage)
         {
+            ItemType fishItem = game.Fish.Item;
             game.End();
-            bobber.gameObject.SetActive(false);
+            if (caught) rig.EndCaught(ItemInfo.Tint(fishItem));
+            else rig.EndFailed();
             readyTime = Time.time + Cooldown;
 
             if (caught)
