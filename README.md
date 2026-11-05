@@ -7,6 +7,8 @@
 | Mustafa Yiğit Genç | 241307022 |
 | İbrahim Akkuş | 241307056 |
 
+**Tarih:** 6 Kasım 2026
+
 Unity **6000.6.7f1** (URP) · C# · NavMesh · Ollama (**gemma3:4b**) · Yeni Input System
 
 ![Başlık ekranı](Docs/screenshots/01_baslik.png)
@@ -23,7 +25,7 @@ Unity **6000.6.7f1** (URP) · C# · NavMesh · Ollama (**gemma3:4b**) · Yeni In
 6. [LLM destekli NPC: Hüsnü Dayı](#6-llm-destekli-npc-hüsnü-dayı)
 7. [Testler ve sonuçlar](#7-testler-ve-sonuçlar)
 8. [Ekran görüntüleri](#8-ekran-görüntüleri)
-9. [Bilinen sınırlamalar](#9-bilinen-sınırlamalar)
+9. [Sonuç ve tartışma](#9-sonuç-ve-tartışma)
 10. [İş bölümü](#10-iş-bölümü)
 11. [Kaynaklar](#11-kaynaklar)
 
@@ -668,13 +670,28 @@ Ham sonuçlar: [`TestResults/`](TestResults/) (her koşunun CSV'si ve özeti).
 | ![Köy](Docs/screenshots/02_koy.png) Köy, tarla ve Cemal | ![Sığ geçit](Docs/screenshots/03_cemal_gecit.png) Cemal sığ geçitte (F1: sensör ışınları ve yol) |
 | ![Sohbet](Docs/screenshots/04_husnu_sohbet.png) Hüsnü Dayı ile sohbet, "Düşünüyor…" | ![Red](Docs/screenshots/05_husnu_red.png) Eksikler varken kapıyı açmıyor |
 | ![Bakkal](Docs/screenshots/06_bakkal.png) Bakkal Nazmi | ![Pano](Docs/screenshots/07_pano.png) Köy ilan panosu |
-| ![Harita](Docs/screenshots/08_harita.png) Harita (M) | ![Maden](Docs/screenshots/09_maden.png) Maden içi, fener ışığı |
+| ![Harita](Docs/screenshots/08_harita.png) Harita (M) | ![Maden](Docs/screenshots/09_maden.png) Maden içi: fener ışığı, sırtta kazma |
 | ![Kirişler](Docs/screenshots/10_kiris.png) Cemal kiriş taşıyor | ![Bitiş](Docs/screenshots/12_bitis.png) Bitiş ekranı |
-| ![Ollama kapalı](Docs/screenshots/13_llm_kapali.png) Ollama kapalıyken | ![Ajan testi](Docs/screenshots/14_ajan_testi.png) Ajan testi (F9) |
+| ![Ollama kapalı](Docs/screenshots/13_llm_kapali.png) Ollama kapalıyken: oyun çökmez, hata mesajı gösterilir | ![Test Runner](Docs/screenshots/11_test_runner.png) 59 birim testi geçiyor |
 
 ---
 
-## 9. Bilinen sınırlamalar
+## 9. Sonuç ve tartışma
+
+### 9.1 Başarılar
+
+- **Otonom ajan güvenilir:** Cemal 30 rastgele başlangıçtan 3 hedefe 30/30 ulaştı (ortalama 14,4 sn). Nehrin karşısına
+  giden 20 denemenin hepsinde oyuncunun kullanamadığı sığ geçidi kendisi buldu. Ölçüm, oyunda da görülen bir takılma
+  hatasını ortaya çıkardı; düzeltilince başarı %73'ten %100'e çıktı.
+- **LLM kararları oyunu bozmuyor:** Gerçek modelle 36 cevabın 36'sı ilk denemede geçerli JSON'du, ortalama cevap süresi
+  1,3 sn. Prompt enjeksiyonu, hakaret, anlamsız girdi ve çantada olmayan hediye kapıyı hiçbir zaman açtırmadı.
+  Model yanlış karar verse bile son sözü oyun kuralları söylüyor (H10–H13).
+- **Hata yönetimi:** Ollama kapalıyken, zaman aşımında, bozuk ya da şema dışı JSON'da oyun çökmüyor, durum bozulmuyor ve
+  oyuncuya ne yapması gerektiği söyleniyor (H1–H9).
+- **Oynanabilir bir bütün:** Tarla, balık, bakkal, ilan panosu, inekler, kirişler ve hikâye modu, ajanı ve NPC'yi tek bir
+  hedef zincirine bağlıyor. Tam oyun yaklaşık 15 dakika sürüyor.
+
+### 9.2 Sınırlılıklar
 
 - **Örnek tekrarı:** Küçük model bazen prompttaki örnek cümleleri neredeyse aynen kullanıyor (örn. mantar hediyesine hep
   aynı cevap). Kararlar doğru, sadece üslup tekrar ediyor. Daha büyük bir model (ör. `gemma3:12b`) bunu azaltır ama daha
@@ -684,6 +701,16 @@ Ham sonuçlar: [`TestResults/`](TestResults/) (her koşunun CSV'si ve özeti).
 - **Görseller** Unity'nin hazır şekillerinden (küp, küre, silindir) kodla kurulmuştur; dışarıdan model ya da doku yoktur.
   Sesler de kodla sentezlenmiştir.
 - **Kayıt yok:** Oyun her açılışta baştan başlar (tek oturumluk bir macera olarak tasarlandı).
+
+### 9.3 Olası geliştirmeler
+
+- **Daha büyük model:** `gemma3:12b` ya da benzeri bir modelle cevaplar daha çeşitli olur. Model adı tek bir ayardan
+  değiştirilebiliyor.
+- **Uzun süreli hafıza:** Şu an son 5 tur hatırlanıyor. Önemli olaylar (verilen hediyeler, hakaretler) kısa bir özet olarak
+  prompta eklenebilir.
+- **Birden çok LLM'li NPC:** Nazmi ve Rıfat Amca da aynı altyapıyla (persona + şema + kurallar) konuşturulabilir.
+- **Ajan için ML-Agents:** Cemal'in görev seçimi ödül fonksiyonuyla öğrenilebilir; NavMesh yolu yine taban olarak kalır.
+- **Kayıt sistemi, gerçek 3B modeller ve animasyonlar.**
 
 ---
 
