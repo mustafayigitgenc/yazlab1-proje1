@@ -32,6 +32,7 @@ namespace Gumusdere.UI
 
         private void OnGUI()
         {
+            if (!Hud.Visible) return;
             EnsureStyles();
 
             float scale = Mathf.Max(1f, Screen.height / 900f);
@@ -46,11 +47,11 @@ namespace Gumusdere.UI
         private void DrawHelpPanel()
         {
             float panelHeight = DebugView.Enabled ? 300f : 125f;
-            GUILayout.BeginArea(new Rect(12f, 12f, 540f, panelHeight), panelStyle);
+            GUILayout.BeginArea(new Rect(12f, 12f, 590f, panelHeight), panelStyle);
             GUILayout.Label("<b>Gümüşdere</b>", textStyle);
-            GUILayout.Label("WASD / oklar: yürü    Shift: koş", textStyle);
+            GUILayout.Label("WASD / oklar: yürü    Shift: koş    J: tüm hedefler", textStyle);
             GUILayout.Label("E: kullan / konuş (tarla, çalı, mantar, iskele, bakkal, pano)    Boşluk: oltayı çek", textStyle);
-            GUILayout.Label("F: Cemal'e görev ver    G: bekle / takip    M: harita    F1: debug    Esc: menü", textStyle);
+            GUILayout.Label("F: Cemal'e görev ver    G: bekle / takip    M: harita    N: ses    F1: debug    Esc: menü", textStyle);
 
             if (DebugView.Enabled && companion != null && companion.Agent != null)
             {

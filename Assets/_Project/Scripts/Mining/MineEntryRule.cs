@@ -21,7 +21,7 @@ namespace Gumusdere.Mining
 
         public static string MissingBeamsReason(int placed) =>
             $"Tünele önce {RequiredBeams} destek kirişi lazım (şu an {placed}/{RequiredBeams}). " +
-            "Cemal kirişleri ormandaki tomruk yığınından madenin ağzına taşıyabilir.";
+            "Kirişleri çoban Rıfat Amca verir (kaçan ineklerini ahıra toplarsan), Cemal de madenin ağzına taşır.";
 
         private static readonly CultureInfo Turkish = new("tr-TR");
         private static readonly string[] DoorWords = { "kapı", "kapi", "maden", "aç", "ac ", "gir", "içeri", "iceri", "anahtar", "kilit", "tünel", "tunel" };
@@ -66,8 +66,8 @@ namespace Gumusdere.Mining
             if (inventory == null || !inventory.Has(ItemType.Lantern))
                 list.Add(("oyuncunun feneri yok (bakkal Nazmi'den alabilir)", "fenerin yok, onu da Nazmi'den al"));
             if (beamsPlaced < RequiredBeams)
-                list.Add(($"madenin ağzında destek kirişi eksik ({beamsPlaced}/{RequiredBeams}; Cemal ormandaki tomruk yığınından taşıyabilir)",
-                          $"madenin ağzında daha {beamsPlaced}/{RequiredBeams} destek kirişi var, Cemal ormandan taşısın"));
+                list.Add(($"madenin ağzında destek kirişi eksik ({beamsPlaced}/{RequiredBeams}; kirişleri Rıfat Amca verir, Cemal taşır)",
+                          $"madenin ağzında daha {beamsPlaced}/{RequiredBeams} destek kirişi var; Rıfat Amca'nın ineklerini topla, kirişleri o verir"));
             return list;
         }
 
