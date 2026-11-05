@@ -103,7 +103,8 @@ namespace Gumusdere.Core
             // 6) Kamera, ışık, girdiler ve arayüz
             Camera cam = SetUpCamera(player.transform, layout.MineStartZ);
             EnvironmentSetup.Apply(cam);
-            gameObject.AddComponent<MineDarkness>().Initialize(player.transform, cemal.transform,
+            var mineDarkness = gameObject.AddComponent<MineDarkness>();
+            mineDarkness.Initialize(player.transform, cemal.transform,
                 cemal.transform.FindDeep(CharacterFactory.HeadLampName)?.gameObject, layout.MineStartZ);
 
             var commands = player.gameObject.AddComponent<PlayerCommandInput>();
@@ -252,7 +253,38 @@ namespace Gumusdere.Core
             }, () => !UiBusy() && !map.IsOpen && !agentTest.IsRunning && !dialogueTest.IsRunning,
                () => $"Köy istekleri: <b>{quests.CompletedCount}/{quests.Quests.Count}</b> (ilan panosu)");
 
-            // 14) Sesler (kodla üretilir) ve ortam sesi
+            // 14) Hikâye modu: önemli anlarda sinema şeritleri ve kısa bölüm yazıları (oyunu durdurmaz)
+            var story = gameObject.AddComponent<StoryView>();
+            story.Initialize(() => flow.IsPlaying && !UiBusy() && !map.IsOpen && !agentTest.IsRunning && !dialogueTest.IsRunning);
+            story.Add("Bölüm 1 · Miras",
+                "Dedenin köyü Gümüşdere artık senin. Madeni yeniden açarsan köy de yeniden doğacak.",
+                () => flow.IsPlaying);
+            story.Add("Bölüm 2 · Dere",
+                "Cemal can yeleğini giydi. Dere soğuk ama artık onu korkutmuyor.",
+                () => cemal.HasLifeVest);
+            story.Add("Bölüm 3 · Köprü",
+                "Yıllardır kalkık duran köprü gıcırdayarak indi. Madenin yolu açıldı.",
+                () => layout.Bridge.IsLowered);
+            story.Add("Bölüm 4 · Hazırlık",
+                "Baret başında, fener elinde. Nazmi gülümsedi: \"Deden de böyle başlamıştı.\"",
+                () => inventory.Has(ItemType.Helmet) && inventory.Has(ItemType.Lantern));
+            story.Add("Bölüm 5 · Sürü",
+                "İnekler ahırda. Rıfat Amca sözünü tuttu: destek kirişleri artık senin.",
+                () => layout.Herd.AllDone);
+            story.Add("Bölüm 6 · Kirişler",
+                "Üç kiriş madenin ağzında. Sıra, kapının anahtarını tutan Hüsnü Dayı'da.",
+                () => layout.Beams.IsComplete);
+            story.Add("Bölüm 7 · Kapı",
+                "Hüsnü Dayı anahtarı çevirdi. Yirmi yıllık sessizlik bozuldu.",
+                () => doorEverOpened);
+            story.Add("Bölüm 8 · Karanlık",
+                "İçerisi zifiri karanlık. Fenerin ve Cemal'in lambası tek dostun.",
+                () => mineDarkness.PlayerInside);
+            story.Add("Bölüm 9 · Damar",
+                "Göçük temizlendi. Taşların arasında bir şey parıldıyor...",
+                () => !layout.Rubble.IsAvailable);
+
+            // 15) Sesler (kodla üretilir) ve ortam sesi
             gameObject.AddComponent<SoundDirector>().Initialize(flow, inventory, wallet, layout, layout.Fishing.Game, dialogue, quests, playerWalk);
 
             log.Add("", "Gümüşdere'ye hoş geldin ağa! Köprü kalkık; Cemal sığ geçitten geçip vinci çevirebilir ama önce ona bir can yeleği lazım. Sağ üstteki hedeflere bak.", Color.white);

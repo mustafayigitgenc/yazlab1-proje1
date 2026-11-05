@@ -71,6 +71,10 @@ namespace Gumusdere.UI
             GUILayout.Space(24f);
             if (GUILayout.Button("Başla  (Enter)", buttonStyle, GUILayout.Height(48f), GUILayout.Width(330f))) flow.StartGame();
             GUILayout.Space(6f);
+            if (GUILayout.Button(StoryView.Enabled ? "Hikâye modu: Açık" : "Hikâye modu: Kapalı", buttonStyle,
+                    GUILayout.Height(38f), GUILayout.Width(330f)))
+                StoryView.Enabled = !StoryView.Enabled;
+            GUILayout.Space(6f);
             if (GUILayout.Button("Çık", buttonStyle, GUILayout.Height(38f), GUILayout.Width(330f))) flow.Quit();
             GUILayout.EndArea();
 
