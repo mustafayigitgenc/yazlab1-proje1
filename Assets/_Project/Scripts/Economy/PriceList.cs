@@ -5,7 +5,7 @@ namespace Gumusdere.Economy
 {
     /// <summary>
     /// Bakkal Nazmi'nin fiyatları (lira). Zor bulunan şey pahalıdır: balon balığı en zor yakalanan balık,
-    /// en yüksek fiyat onda. Baret + fener toplam 140 lira; bir tarlanın tamamı (12 balkabağı) 72 lira eder.
+    /// en yüksek fiyat onda. Baret + fener toplam 140 lira, kazma tek başına 100 lira; bir tarlanın tamamı (12 balkabağı) 72 lira eder.
     /// Köy ilan panosundaki istekler daha çok para verir; oyuncu birkaç isteği yapıp ekipmanı alır.
     /// </summary>
     public static class PriceList
@@ -28,11 +28,12 @@ namespace Gumusdere.Economy
         {
             [ItemType.LifeVest] = 30,
             [ItemType.Helmet] = 80,
-            [ItemType.Lantern] = 60
+            [ItemType.Lantern] = 60,
+            [ItemType.Pickaxe] = 100 // en pahalı eşya: oyunu bitiren gümüş damarı onunla kazılır
         };
 
         /// <summary>Bakkalda satılan ekipman (sırayla).</summary>
-        public static readonly IReadOnlyList<ItemType> ForSale = new[] { ItemType.LifeVest, ItemType.Helmet, ItemType.Lantern };
+        public static readonly IReadOnlyList<ItemType> ForSale = new[] { ItemType.LifeVest, ItemType.Helmet, ItemType.Lantern, ItemType.Pickaxe };
 
         /// <summary>Satış fiyatı; satılamıyorsa 0.</summary>
         public static int SellPrice(ItemType type) => SellPrices.TryGetValue(type, out int p) ? p : 0;

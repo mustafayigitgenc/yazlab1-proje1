@@ -11,6 +11,7 @@ namespace Gumusdere.Player
     public sealed class PlayerEquipmentView : MonoBehaviour
     {
         public const string HelmetName = "Ekipman_Baret";
+        public const string PickaxeName = "Ekipman_Kazma";
         public const string LanternName = "Ekipman_Fener";
         public const string HatName = "Sapka";
 
@@ -18,6 +19,7 @@ namespace Gumusdere.Player
         private GameObject helmet;
         private GameObject lantern;
         private GameObject hat;
+        private GameObject pickaxe;
 
         public void Initialize(IInventory playerInventory)
         {
@@ -25,6 +27,7 @@ namespace Gumusdere.Player
             helmet = transform.FindDeep(HelmetName)?.gameObject;
             lantern = transform.FindDeep(LanternName)?.gameObject;
             hat = transform.FindDeep(HatName)?.gameObject;
+            pickaxe = transform.FindDeep(PickaxeName)?.gameObject;
             inventory.Changed += (type, count) => Refresh();
             Refresh();
         }
@@ -35,6 +38,7 @@ namespace Gumusdere.Player
             if (helmet != null) helmet.SetActive(hasHelmet);
             if (hat != null) hat.SetActive(!hasHelmet);
             if (lantern != null) lantern.SetActive(inventory.Has(ItemType.Lantern));
+            if (pickaxe != null) pickaxe.SetActive(inventory.Has(ItemType.Pickaxe));
         }
     }
 }

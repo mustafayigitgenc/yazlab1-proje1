@@ -47,6 +47,15 @@ namespace Gumusdere.Spawning
             Shapes.Box("Baret_Siper", helmet, new Vector3(0f, 1.62f, 0.22f), new Vector3(0.45f, 0.04f, 0.2f), Palette.Helmet, false);
             helmet.gameObject.SetActive(false);
 
+            // Kazma sırtta çapraz durur; bakkaldan alınınca görünür (PlayerEquipmentView).
+            var pick = new GameObject(PlayerEquipmentView.PickaxeName).transform;
+            pick.SetParent(t, false);
+            pick.localPosition = new Vector3(0f, 1.0f, -0.27f);
+            pick.localRotation = Quaternion.Euler(0f, 0f, 35f);
+            Shapes.Cylinder("Kazma_Sap", pick, Vector3.zero, new Vector3(0.06f, 0.5f, 0.06f), Palette.Wood, false);
+            Shapes.Box("Kazma_Bas", pick, new Vector3(0f, 0.48f, 0f), new Vector3(0.62f, 0.09f, 0.09f), new Color(0.55f, 0.57f, 0.6f), false);
+            pick.gameObject.SetActive(false);
+
             // Fener sol elde: kol pivotunun altında, yürürken kolla birlikte sallanır.
             var lantern = new GameObject(PlayerEquipmentView.LanternName).transform;
             lantern.SetParent(t.Find(HumanoidBody.LeftArm), false);

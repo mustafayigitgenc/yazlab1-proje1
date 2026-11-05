@@ -19,7 +19,8 @@ namespace Gumusdere.Items
         // Bakkaldan alınan ekipman (hediye edilmez, satılmaz; madene girmek için gerekir)
         Helmet,
         Lantern,
-        LifeVest   // Cemal'in can yeleği: onsuz sığ geçide girmez
+        LifeVest,  // Cemal'in can yeleği: onsuz sığ geçide girmez
+        Pickaxe    // Kazma: gümüş damarını kazmak için gerekir (oyunun en pahalı eşyası)
     }
 
     /// <summary>Bir eşyanın sabit bilgileri: ekranda görünen ad, LLM anahtarı, renk ve cümlede tanınacağı kelimeler.</summary>
@@ -64,13 +65,14 @@ namespace Gumusdere.Items
             [ItemType.FlyAgaric] = new("Sinek mantarı", "sinek_mantari", new Color(0.85f, 0.12f, 0.12f), "sinek", "mantar"),
             [ItemType.Helmet] = new("Baret", "baret", new Color(0.98f, 0.82f, 0.10f), "baret", "kask"),
             [ItemType.Lantern] = new("Fener", "fener", new Color(1.00f, 0.92f, 0.55f), "fener", "lamba"),
-            [ItemType.LifeVest] = new("Can yeleği", "can_yelegi", new Color(1.00f, 0.45f, 0.10f), "can yeleği", "can yelegi", "yelek")
+            [ItemType.LifeVest] = new("Can yeleği", "can_yelegi", new Color(1.00f, 0.45f, 0.10f), "can yeleği", "can yelegi", "yelek"),
+            [ItemType.Pickaxe] = new("Kazma", "kazma", new Color(0.62f, 0.64f, 0.68f), "kazma")
         };
 
         public static IEnumerable<ItemType> All => Table.Keys;
 
-        /// <summary>Ekipman mı (baret, fener)? Ekipman hediye edilemez ve satılamaz.</summary>
-        public static bool IsTool(ItemType type) => type == ItemType.Helmet || type == ItemType.Lantern || type == ItemType.LifeVest;
+        /// <summary>Ekipman mı (baret, fener, can yeleği, kazma)? Ekipman hediye edilemez ve satılamaz.</summary>
+        public static bool IsTool(ItemType type) => type == ItemType.Helmet || type == ItemType.Lantern || type == ItemType.LifeVest || type == ItemType.Pickaxe;
 
         /// <summary>NPC'ye hediye edilebilen eşyalar (JSON şemasındaki accepted_gift seçenekleri).</summary>
         public static IEnumerable<ItemType> Giftable

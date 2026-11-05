@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Gumusdere.UI
 {
     /// <summary>
-    /// Nazmi'nin bakkalı penceresi: solda çantadaki ürünleri satma, sağda baret ve fener alma.
+    /// Nazmi'nin bakkalı penceresi: solda çantadaki ürünleri satma, sağda ekipman (can yeleği, baret, fener, kazma) alma.
     /// Kurallar Shop sınıfındadır, burası sadece çizer.
     /// </summary>
     public sealed class ShopView : ModalWindow
@@ -17,7 +17,7 @@ namespace Gumusdere.UI
         private IMessageLog log;
         private string lastMessage;
 
-        protected override Vector2 PanelSize => new(720f, 470f);
+        protected override Vector2 PanelSize => new(720f, 500f);
 
         public void Initialize(Shop targetShop, System.Action<bool> controlsSetter, ISpeaker shopkeeperSpeaker, IMessageLog messageLog)
         {
@@ -100,6 +100,7 @@ namespace Gumusdere.UI
             GUILayout.Space(8f);
             GUILayout.Label("Can yeleği Cemal için: onsuz sığ geçide girmez.", SmallStyle);
             GUILayout.Label("Hüsnü Dayı, baret ve fener olmadan kimseyi madene sokmaz.", SmallStyle);
+            GUILayout.Label("Gümüş damarı ancak kazmayla açılır.", SmallStyle);
             GUILayout.Label("Daha çok para için köy meydanındaki ilan panosuna bak.", SmallStyle);
             GUILayout.EndVertical();
         }
@@ -118,6 +119,7 @@ namespace Gumusdere.UI
                 ItemType.Helmet => "Sağlam baret, başına taş düşse bir şey olmaz!",
                 ItemType.Lantern => "Bu fener madenin en dibini aydınlatır.",
                 ItemType.LifeVest => "Cemal'e yakışır! Artık akıntıdan korkmaz.",
+                ItemType.Pickaxe => "Dükkânın en iyisi! Deden de böyle bir kazmayla çalışırdı.",
                 _ => "Güle güle kullan ağa!"
             });
         }

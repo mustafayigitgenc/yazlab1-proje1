@@ -83,6 +83,22 @@ namespace Gumusdere.Tests
         }
 
         [Test]
+        public void Kazma_EnPahaliEsya_HediyeEdilemez()
+        {
+            int pickaxe = PriceList.BuyPrice(ItemType.Pickaxe);
+            Assert.AreEqual(100, pickaxe);
+            foreach (ItemType item in ItemInfo.All)
+            {
+                if (item == ItemType.Pickaxe) continue;
+                Assert.Greater(pickaxe, PriceList.BuyPrice(item), item.ToString());
+                Assert.Greater(pickaxe, PriceList.SellPrice(item), item.ToString());
+            }
+            Assert.IsTrue(ItemInfo.IsTool(ItemType.Pickaxe));
+            Assert.IsFalse(System.Linq.Enumerable.Contains(ItemInfo.Giftable, ItemType.Pickaxe), "kazma hediye edilmemeli");
+            Assert.IsTrue(System.Linq.Enumerable.Contains(PriceList.ForSale, ItemType.Pickaxe), "kazma bakkalda satılmalı");
+        }
+
+        [Test]
         public void MadenKurali_GuvenVeEkipmanIster()
         {
             Assert.IsNotNull(MineEntryRule.Check(60, 70, false, inventory), "güven düşük");
