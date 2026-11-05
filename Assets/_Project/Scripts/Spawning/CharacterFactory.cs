@@ -29,10 +29,12 @@ namespace Gumusdere.Spawning
             body.stepOffset = 0.35f;
 
             Transform t = root.transform;
-            Shapes.Capsule("Govde", t, new Vector3(0f, 0.7f, 0f), new Vector3(0.7f, 0.55f, 0.6f), Palette.Shirt, false);
-            Shapes.Box("Pantolon", t, new Vector3(0f, 0.3f, 0f), new Vector3(0.55f, 0.6f, 0.45f), Palette.Trousers, false);
-            Shapes.Sphere("Kafa", t, new Vector3(0f, 1.5f, 0f), Vector3.one * 0.5f, Palette.Skin, false);
-            Shapes.Box("Burun", t, new Vector3(0f, 1.5f, 0.25f), new Vector3(0.1f, 0.1f, 0.1f), Palette.Skin, false);
+            HumanoidBody.Build(t, new HumanoidBody.Style
+            {
+                Shirt = Palette.Shirt, Trousers = Palette.Trousers, Skin = Palette.Skin,
+                Hair = new Color(0.25f, 0.16f, 0.1f), Bulk = 0.95f, Hair_On = true
+            });
+            Shapes.Box("Burun", t, new Vector3(0f, 1.49f, 0.245f), new Vector3(0.08f, 0.09f, 0.08f), Palette.Skin, false);
             var hat = new GameObject(PlayerEquipmentView.HatName).transform;
             hat.SetParent(t, false);
             Shapes.Cylinder("Sapka_Kenar", hat, new Vector3(0f, 1.72f, 0f), new Vector3(0.75f, 0.03f, 0.75f), Palette.Hay, false);
@@ -45,9 +47,10 @@ namespace Gumusdere.Spawning
             Shapes.Box("Baret_Siper", helmet, new Vector3(0f, 1.62f, 0.22f), new Vector3(0.45f, 0.04f, 0.2f), Palette.Helmet, false);
             helmet.gameObject.SetActive(false);
 
+            // Fener sol elde: kol pivotunun altında, yürürken kolla birlikte sallanır.
             var lantern = new GameObject(PlayerEquipmentView.LanternName).transform;
-            lantern.SetParent(t, false);
-            lantern.localPosition = new Vector3(-0.45f, 0.75f, 0.15f);
+            lantern.SetParent(t.Find(HumanoidBody.LeftArm), false);
+            lantern.localPosition = new Vector3(0f, -0.68f, 0.06f);
             Shapes.Box("Fener_Govde", lantern, Vector3.zero, new Vector3(0.16f, 0.22f, 0.16f), Palette.DarkWood, false);
             Shapes.Sphere("Fener_Isik", lantern, new Vector3(0f, 0.01f, 0f), Vector3.one * 0.13f,
                 Gumusdere.Ambience.Ambient.Hdr(new Color(1f, 0.85f, 0.5f), 4f), false);
@@ -79,17 +82,22 @@ namespace Gumusdere.Spawning
             root.transform.position = position;
 
             Transform t = root.transform;
-            Shapes.Capsule("Govde", t, new Vector3(0f, 0.7f, 0f), new Vector3(0.75f, 0.55f, 0.65f), Palette.WorkerShirt, false);
-            Shapes.Box("Pantolon", t, new Vector3(0f, 0.3f, 0f), new Vector3(0.6f, 0.6f, 0.5f), Palette.Trousers, false);
-            Shapes.Sphere("Kafa", t, new Vector3(0f, 1.5f, 0f), Vector3.one * 0.5f, Palette.Skin, false);
-            Shapes.Box("Burun", t, new Vector3(0f, 1.5f, 0.25f), new Vector3(0.1f, 0.1f, 0.1f), Palette.Skin, false);
+            HumanoidBody.Build(t, new HumanoidBody.Style
+            {
+                Shirt = Palette.WorkerShirt, Trousers = new Color(0.25f, 0.3f, 0.45f), Skin = new Color(0.86f, 0.68f, 0.52f),
+                Hair = new Color(0.12f, 0.09f, 0.07f), Bulk = 1.05f, Hair_On = false
+            });
+            Shapes.Box("Burun", t, new Vector3(0f, 1.49f, 0.245f), new Vector3(0.09f, 0.1f, 0.09f), new Color(0.86f, 0.68f, 0.52f), false);
+            Shapes.Box("Biyik", t, new Vector3(0f, 1.425f, 0.235f), new Vector3(0.2f, 0.045f, 0.05f), new Color(0.12f, 0.09f, 0.07f), false);
+            Shapes.Box("Tulum_Askisi", t, new Vector3(-0.12f, 1.0f, 0.2f), new Vector3(0.06f, 0.55f, 0.03f), new Color(0.25f, 0.3f, 0.45f), false);
+            Shapes.Box("Tulum_Askisi", t, new Vector3(0.12f, 1.0f, 0.2f), new Vector3(0.06f, 0.55f, 0.03f), new Color(0.25f, 0.3f, 0.45f), false);
             Shapes.Sphere("Baret", t, new Vector3(0f, 1.66f, 0f), new Vector3(0.56f, 0.36f, 0.56f), Palette.Helmet, false);
             Shapes.Box("Baret_Siper", t, new Vector3(0f, 1.62f, 0.22f), new Vector3(0.45f, 0.04f, 0.2f), Palette.Helmet, false);
 
             // Sulama kovası: sağ elinde; sadece sulama görevinde görünür (WateringJob açıp kapatır).
             var can = new GameObject(Gumusdere.Farming.WateringJob.CanObjectName).transform;
-            can.SetParent(t, false);
-            can.localPosition = new Vector3(0.48f, 0.55f, 0.18f);
+            can.SetParent(t.Find(HumanoidBody.RightArm), false);
+            can.localPosition = new Vector3(0.02f, -0.78f, 0.1f);
             Shapes.Cylinder("Kova_Govde", can, Vector3.zero, new Vector3(0.32f, 0.18f, 0.32f), Palette.RoofBlue, false);
             Shapes.Cylinder("Kova_Su", can, new Vector3(0f, 0.18f, 0f), new Vector3(0.27f, 0.01f, 0.27f), Palette.Water, false);
             Shapes.Cylinder("Kova_Ibrik", can, new Vector3(0f, 0.08f, 0.22f), new Vector3(0.06f, 0.16f, 0.06f), Palette.RoofBlue, false,
@@ -112,10 +120,10 @@ namespace Gumusdere.Spawning
             var vest = new GameObject(CompanionController.LifeVestObjectName).transform;
             vest.SetParent(t, false);
             Color vestColor = new(1f, 0.42f, 0.08f);
-            Shapes.Box("Yelek", vest, new Vector3(0f, 0.85f, 0f), new Vector3(0.82f, 0.55f, 0.72f), vestColor, false);
-            Shapes.Box("Yelek_Serit", vest, new Vector3(0f, 0.95f, 0f), new Vector3(0.84f, 0.06f, 0.74f), Palette.Wall, false);
-            Shapes.Box("Yelek_Serit", vest, new Vector3(0f, 0.75f, 0f), new Vector3(0.84f, 0.06f, 0.74f), Palette.Wall, false);
-            Shapes.Box("Yelek_Yaka", vest, new Vector3(0f, 1.17f, 0f), new Vector3(0.5f, 0.12f, 0.45f), vestColor, false);
+            Shapes.Box("Yelek", vest, new Vector3(0f, 0.98f, 0f), new Vector3(0.68f, 0.52f, 0.54f), vestColor, false);
+            Shapes.Box("Yelek_Serit", vest, new Vector3(0f, 1.08f, 0f), new Vector3(0.7f, 0.06f, 0.56f), Palette.Wall, false);
+            Shapes.Box("Yelek_Serit", vest, new Vector3(0f, 0.86f, 0f), new Vector3(0.7f, 0.06f, 0.56f), Palette.Wall, false);
+            Shapes.Box("Yelek_Yaka", vest, new Vector3(0f, 1.27f, 0f), new Vector3(0.42f, 0.1f, 0.4f), vestColor, false);
             vest.gameObject.SetActive(false);
 
             // Omuzdaki destek kirişi: sadece kiriş taşıma görevinde görünür (BeamHaulJob açıp kapatır).
@@ -163,11 +171,15 @@ namespace Gumusdere.Spawning
             root.transform.rotation = Quaternion.Euler(0f, 200f, 0f);
 
             Transform t = root.transform;
-            Shapes.Capsule("Govde", t, new Vector3(0f, 0.7f, 0f), new Vector3(0.8f, 0.55f, 0.7f), Palette.Vest, false);
-            Shapes.Box("Pantolon", t, new Vector3(0f, 0.3f, 0f), new Vector3(0.6f, 0.6f, 0.5f), Palette.Trousers, false);
-            Shapes.Sphere("Kafa", t, new Vector3(0f, 1.5f, 0f), Vector3.one * 0.5f, Palette.Skin, false);
-            Shapes.Box("Burun", t, new Vector3(0f, 1.5f, 0.25f), new Vector3(0.1f, 0.1f, 0.1f), Palette.Skin, false);
-            Shapes.Sphere("Sakal", t, new Vector3(0f, 1.33f, 0.14f), new Vector3(0.42f, 0.32f, 0.3f), Palette.Beard, false);
+            HumanoidBody.Build(t, new HumanoidBody.Style
+            {
+                Shirt = Palette.Vest, Trousers = new Color(0.3f, 0.28f, 0.25f), Skin = new Color(0.9f, 0.74f, 0.62f),
+                Hair = Palette.Beard, Bulk = 1.1f, Hair_On = true
+            });
+            Shapes.Box("Burun", t, new Vector3(0f, 1.48f, 0.245f), new Vector3(0.1f, 0.11f, 0.1f), new Color(0.9f, 0.74f, 0.62f), false);
+            Shapes.Sphere("Sakal", t, new Vector3(0f, 1.36f, 0.15f), new Vector3(0.4f, 0.3f, 0.26f), Palette.Beard, false);
+            Shapes.Box("Biyik", t, new Vector3(0f, 1.43f, 0.24f), new Vector3(0.24f, 0.05f, 0.06f), Palette.Beard, false);
+            Shapes.Box("Yelek_On", t, new Vector3(0f, 0.95f, 0.2f), new Vector3(0.16f, 0.6f, 0.03f), new Color(0.85f, 0.82f, 0.75f), false);
             Shapes.Cylinder("Kasket", t, new Vector3(0f, 1.74f, 0f), new Vector3(0.5f, 0.07f, 0.5f), Palette.DarkWood, false);
             Shapes.Box("Kasket_Siper", t, new Vector3(0f, 1.7f, 0.24f), new Vector3(0.36f, 0.03f, 0.18f), Palette.DarkWood, false);
             Shapes.Cylinder("Baston", t, new Vector3(0.45f, 0.55f, 0.15f), new Vector3(0.06f, 0.55f, 0.06f), Palette.Wood, false);
@@ -188,7 +200,7 @@ namespace Gumusdere.Spawning
             root.name = "Coban_Rifat";
             foreach (Renderer r in root.GetComponentsInChildren<Renderer>())
             {
-                if (r.name == "Govde") r.sharedMaterial = MaterialLibrary.Get(new Color(0.35f, 0.5f, 0.25f));
+                if (r.name == "Govde" || r.name == "Kol") r.sharedMaterial = MaterialLibrary.Get(new Color(0.35f, 0.5f, 0.25f));
                 else if (r.name == "Onluk") r.sharedMaterial = MaterialLibrary.Get(Palette.Trousers);
                 else if (r.name.StartsWith("Kasket")) r.sharedMaterial = MaterialLibrary.Get(Palette.Hay);
                 else if (r.name == "Biyik") r.sharedMaterial = MaterialLibrary.Get(new Color(0.85f, 0.85f, 0.82f));
@@ -207,12 +219,14 @@ namespace Gumusdere.Spawning
             root.transform.rotation = Quaternion.Euler(0f, facingY, 0f);
 
             Transform t = root.transform;
-            Shapes.Capsule("Govde", t, new Vector3(0f, 0.7f, 0f), new Vector3(0.85f, 0.55f, 0.75f), Palette.RoofBlue, false);
-            Shapes.Box("Onluk", t, new Vector3(0f, 0.65f, 0.3f), new Vector3(0.55f, 0.75f, 0.06f), Palette.Wall, false);
-            Shapes.Box("Pantolon", t, new Vector3(0f, 0.3f, 0f), new Vector3(0.6f, 0.6f, 0.5f), Palette.Trousers, false);
-            Shapes.Sphere("Kafa", t, new Vector3(0f, 1.5f, 0f), Vector3.one * 0.5f, Palette.Skin, false);
-            Shapes.Box("Burun", t, new Vector3(0f, 1.5f, 0.25f), new Vector3(0.1f, 0.1f, 0.1f), Palette.Skin, false);
-            Shapes.Box("Biyik", t, new Vector3(0f, 1.42f, 0.25f), new Vector3(0.26f, 0.05f, 0.06f), Palette.DarkWood, false);
+            HumanoidBody.Build(t, new HumanoidBody.Style
+            {
+                Shirt = Palette.RoofBlue, Trousers = Palette.Trousers, Skin = Palette.Skin,
+                Hair = new Color(0.2f, 0.14f, 0.1f), Bulk = 1.2f, Hair_On = true
+            });
+            Shapes.Box("Onluk", t, new Vector3(0f, 0.8f, 0.24f), new Vector3(0.5f, 0.7f, 0.04f), Palette.Wall, false);
+            Shapes.Box("Burun", t, new Vector3(0f, 1.49f, 0.245f), new Vector3(0.1f, 0.1f, 0.1f), Palette.Skin, false);
+            Shapes.Box("Biyik", t, new Vector3(0f, 1.425f, 0.235f), new Vector3(0.26f, 0.05f, 0.06f), Palette.DarkWood, false);
             Shapes.Cylinder("Kasket", t, new Vector3(0f, 1.74f, 0f), new Vector3(0.5f, 0.07f, 0.5f), Palette.Roof, false);
             Shapes.Box("Kasket_Siper", t, new Vector3(0f, 1.7f, 0.24f), new Vector3(0.36f, 0.03f, 0.18f), Palette.Roof, false);
             return root;

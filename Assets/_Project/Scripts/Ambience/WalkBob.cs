@@ -1,3 +1,4 @@
+using Gumusdere.Core;
 using UnityEngine;
 
 namespace Gumusdere.Ambience
@@ -10,6 +11,7 @@ namespace Gumusdere.Ambience
     public sealed class WalkBob : MonoBehaviour
     {
         private Transform pivot;
+        private Transform leftLeg, rightLeg, leftArm, rightArm;
         private Vector3 lastPosition;
         private float phase;
         private float speed;
@@ -47,6 +49,12 @@ namespace Gumusdere.Ambience
 
             lastPosition = transform.position;
             breathOffset = Random.value * 10f;
+
+            // İnsan karakterlerde kol ve bacak pivotları (HumanoidBody); ineklerde yok, onlarda sadece gövde sallanır.
+            leftLeg = transform.FindDeep(Gumusdere.Spawning.HumanoidBody.LeftLeg);
+            rightLeg = transform.FindDeep(Gumusdere.Spawning.HumanoidBody.RightLeg);
+            leftArm = transform.FindDeep(Gumusdere.Spawning.HumanoidBody.LeftArm);
+            rightArm = transform.FindDeep(Gumusdere.Spawning.HumanoidBody.RightArm);
         }
 
         private void LateUpdate()
@@ -78,6 +86,13 @@ namespace Gumusdere.Ambience
             pivot.localPosition = new Vector3(0f, bob, 0f);
             pivot.localRotation = Quaternion.Euler(0f, 0f, sway);
             pivot.localScale = new Vector3(1f, breath, 1f);
+
+            // Adım ritminde bacaklar ileri-geri, kollar ters yönde sallanır.
+            float swing = Mathf.Sin(phase) * moving;
+            if (leftLeg != null) leftLeg.localRotation = Quaternion.Euler(swing * 28f, 0f, 0f);
+            if (rightLeg != null) rightLeg.localRotation = Quaternion.Euler(-swing * 28f, 0f, 0f);
+            if (leftArm != null) leftArm.localRotation = Quaternion.Euler(-swing * 24f, 0f, -4f);
+            if (rightArm != null) rightArm.localRotation = Quaternion.Euler(swing * 24f, 0f, 4f);
         }
     }
 }
