@@ -9,7 +9,8 @@ namespace Gumusdere.UI
     /// <summary>
     /// Hikâye modu: önemli anlarda ekranın üstüne ve altına sinema şeritleri iner; üst şeritte bölüm adı,
     /// alt şeritte 1–2 cümlelik anlatım daktilo gibi yazılır. Oyun durmaz; Enter ile geçilir.
-    /// Her bölüm bir koşula bağlıdır (örn. "köprü indi") ve bir kez gösterilir. Başlık ekranından kapatılabilir.
+    /// Her bölüm bir koşula bağlıdır (örn. "köprü indi") ve bir kez gösterilir. Numara gösterilme sırasıyla verilir
+    /// (oyuncu adımları farklı sırayla yapsa da Bölüm 1, 2, 3... diye gider). Başlık ekranından kapatılabilir.
     /// </summary>
     public sealed class StoryView : MonoBehaviour
     {
@@ -31,6 +32,8 @@ namespace Gumusdere.UI
         private readonly Queue<Beat> queue = new();
         private Func<bool> canShow = () => true;
         private Beat current;
+        private int chapterNumber;
+        private string currentTitle;
         private float shownFor;
         private float bars; // 0 = kapalı, 1 = tam açık
         private GUIStyle chapterStyle, textStyle, hintStyle;
@@ -42,7 +45,7 @@ namespace Gumusdere.UI
             canShow = showAllowed ?? (() => true);
         }
 
-        /// <summary>Koşul ilk kez doğru olduğunda bu bölüm gösterilir.</summary>
+        /// <summary>Koşul ilk kez doğru olduğunda bu bölüm gösterilir. chapter: numarasız bölüm adı.</summary>
         public void Add(string chapter, string text, Func<bool> condition)
         {
             beats.Add(new Beat { Chapter = chapter, Text = text, Condition = condition });
@@ -65,6 +68,8 @@ namespace Gumusdere.UI
             {
                 current = queue.Dequeue();
                 shownFor = 0f;
+                chapterNumber++;
+                currentTitle = $"Bölüm {chapterNumber} · {current.Chapter}";
             }
 
             bars = Mathf.MoveTowards(bars, current != null && allowed ? 1f : 0f, Time.unscaledDeltaTime * BarSpeed);
@@ -105,7 +110,7 @@ namespace Gumusdere.UI
             if (current == null || k < 0.95f) return;
 
             Fill(new Rect(w * 0.5f - 160f, bar - 20f, 320f, 1f), new Color(1f, 0.8f, 0.45f, 0.6f));
-            GUI.Label(new Rect(0f, 8f, w, bar - 30f), current.Chapter, chapterStyle);
+            GUI.Label(new Rect(0f, 8f, w, bar - 30f), currentTitle, chapterStyle);
 
             int visible = Mathf.Clamp(Mathf.FloorToInt(shownFor * CharsPerSecond), 0, current.Text.Length);
             GUI.Label(new Rect(w * 0.12f, h - bar + 8f, w * 0.76f, bar - 26f), current.Text.Substring(0, visible), textStyle);

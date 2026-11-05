@@ -238,6 +238,8 @@ namespace Gumusdere.Core
                 new ObjectiveTracker.Step("Baret ve fener al",
                     () => doorEverOpened || (inventory.Has(ItemType.Helmet) && inventory.Has(ItemType.Lantern)),
                     () => $"Nazmi'nin bakkalında. Paran {wallet.Money}/{MoneyNeeded(ItemType.Helmet, ItemType.Lantern)} lira: ürün sat ya da ilan panosundaki istekleri yap."),
+                new ObjectiveTracker.Step("Kazma al", () => layout.Vein.IsMined || inventory.Has(ItemType.Pickaxe),
+                    () => $"Nazmi'nin bakkalında, {PriceList.BuyPrice(ItemType.Pickaxe)} lira (paran {wallet.Money}). Gümüş damarı ancak kazmayla açılır."),
                 new ObjectiveTracker.Step("Rıfat Amca'nın ineklerini ahıra topla", () => layout.Herd.AllDone,
                     () => $"Mera'nın doğusundaki ahırın yanında F: Cemal kaçan inekleri tek tek getirir ({layout.Herd.Penned}/{layout.Herd.Total})."),
                 new ObjectiveTracker.Step("Destek kirişlerini madenin ağzına taşıt", () => layout.Beams.IsComplete,
@@ -253,34 +255,38 @@ namespace Gumusdere.Core
             }, () => !UiBusy() && !map.IsOpen && !agentTest.IsRunning && !dialogueTest.IsRunning,
                () => $"Köy istekleri: <b>{quests.CompletedCount}/{quests.Quests.Count}</b> (ilan panosu)");
 
-            // 14) Hikâye modu: önemli anlarda sinema şeritleri ve kısa bölüm yazıları (oyunu durdurmaz)
+            // 14) Hikâye modu: önemli anlarda sinema şeritleri ve kısa bölüm yazıları (oyunu durdurmaz).
+            //     Bölüm numarası gösterildiği sırayla verilir; oyuncu hangi sırayla oynarsa oynasın 1, 2, 3... diye gider.
             var story = gameObject.AddComponent<StoryView>();
             story.Initialize(() => flow.IsPlaying && !UiBusy() && !map.IsOpen && !agentTest.IsRunning && !dialogueTest.IsRunning);
-            story.Add("Bölüm 1 · Miras",
+            story.Add("Miras",
                 "Dedenin köyü Gümüşdere artık senin. Madeni yeniden açarsan köy de yeniden doğacak.",
                 () => flow.IsPlaying);
-            story.Add("Bölüm 2 · Dere",
+            story.Add("Dere",
                 "Cemal can yeleğini giydi. Dere soğuk ama artık onu korkutmuyor.",
                 () => cemal.HasLifeVest);
-            story.Add("Bölüm 3 · Köprü",
+            story.Add("Köprü",
                 "Yıllardır kalkık duran köprü gıcırdayarak indi. Madenin yolu açıldı.",
                 () => layout.Bridge.IsLowered);
-            story.Add("Bölüm 4 · Hazırlık",
+            story.Add("Hazırlık",
                 "Baret başında, fener elinde. Nazmi gülümsedi: \"Deden de böyle başlamıştı.\"",
                 () => inventory.Has(ItemType.Helmet) && inventory.Has(ItemType.Lantern));
-            story.Add("Bölüm 5 · Sürü",
+            story.Add("Kazma",
+                "Dükkânın en pahalı kazması artık sırtında. Gümüş damarı onu bekliyor.",
+                () => inventory.Has(ItemType.Pickaxe));
+            story.Add("Sürü",
                 "İnekler ahırda. Rıfat Amca sözünü tuttu: destek kirişleri artık senin.",
                 () => layout.Herd.AllDone);
-            story.Add("Bölüm 6 · Kirişler",
+            story.Add("Kirişler",
                 "Üç kiriş madenin ağzında. Sıra, kapının anahtarını tutan Hüsnü Dayı'da.",
                 () => layout.Beams.IsComplete);
-            story.Add("Bölüm 7 · Kapı",
+            story.Add("Kapı",
                 "Hüsnü Dayı anahtarı çevirdi. Yirmi yıllık sessizlik bozuldu.",
                 () => doorEverOpened);
-            story.Add("Bölüm 8 · Karanlık",
+            story.Add("Karanlık",
                 "İçerisi zifiri karanlık. Fenerin ve Cemal'in lambası tek dostun.",
                 () => mineDarkness.PlayerInside);
-            story.Add("Bölüm 9 · Damar",
+            story.Add("Damar",
                 "Göçük temizlendi. Taşların arasında bir şey parıldıyor...",
                 () => !layout.Rubble.IsAvailable);
 

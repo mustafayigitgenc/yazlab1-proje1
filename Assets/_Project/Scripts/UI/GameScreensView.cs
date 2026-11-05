@@ -62,7 +62,7 @@ namespace Gumusdere.UI
                 "Dedenden kalan dağ köyü Gümüşdere'yi devraldın. Köy eskiden gümüş madeniyle geçinirdi, " +
                 "ama yirmi yıl önceki göçükten beri maden kapalı.\n\n" +
                 "Yanında işçin <b>Cemal</b> var: köprüyü indirir, tarlayı sular, kiriş taşır, göçüğü temizler. " +
-                "Tarlanla, oltanla ve köylülerin istekleriyle para kazan, bakkal <b>Nazmi</b>'den baret ve fener al, " +
+                "Tarlanla, oltanla ve köylülerin istekleriyle para kazan, bakkal <b>Nazmi</b>'den baret, fener ve kazma al, " +
                 "sonra maden kapısının anahtarını tutan <b>Hüsnü Dayı</b>'yı ikna et.", textStyle);
             GUILayout.Space(16f);
             GUILayout.Label(

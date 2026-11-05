@@ -185,6 +185,8 @@ namespace Gumusdere.World
             Shapes.Sphere("Urun_Bogurtlen", root, new Vector3(-0.45f, 1.12f, -0.95f), Vector3.one * 0.18f, Palette.Berry, false);
             Shapes.Sphere("Urun_Baret", root, new Vector3(0.45f, 1.18f, -0.9f), new Vector3(0.42f, 0.26f, 0.42f), Palette.Helmet, false);
             Shapes.Box("Urun_Fener", root, new Vector3(1.05f, 1.2f, -0.9f), new Vector3(0.18f, 0.28f, 0.18f), Palette.Hay, false);
+            Shapes.Box("Urun_Kazma_Sap", root, new Vector3(-0.08f, 1.09f, -0.6f), new Vector3(0.56f, 0.05f, 0.05f), Palette.Wood, false);
+            Shapes.Box("Urun_Kazma_Bas", root, new Vector3(0.19f, 1.1f, -0.6f), new Vector3(0.07f, 0.07f, 0.4f), new Color(0.55f, 0.57f, 0.6f), false);
 
             layout.ShopkeeperSpot = c + new Vector3(0f, 0f, 0.1f);
             layout.Shop = root.gameObject.AddComponent<Gumusdere.Economy.ShopStall>();
@@ -274,7 +276,7 @@ namespace Gumusdere.World
         {
             var root = new GameObject("Ahir").transform;
             root.SetParent(zone, false);
-            const float x0 = 21f, x1 = 29f, z0 = 28f, z1 = 34f;
+            const float x0 = 21f, z0 = 28f, z1 = 34f; // ağıl batı kenarı ve güney/kuzey çitleri (doğu kenarı ahır binası)
 
             // Ahır binası (doğu kenarı)
             Shapes.Box("Ahir_Bina", root, new Vector3(28f, 1.4f, 31f), new Vector3(2.2f, 2.8f, 6f), Palette.Roof);
@@ -580,9 +582,9 @@ namespace Gumusdere.World
             Roof(zone, new Vector3(0f, 4.3f, 92.5f), new Vector3(28f, 0.6f, 27f));
             Roof(zone, new Vector3(0f, 4.3f, 76f), new Vector3(6f, 0.6f, 9f));
 
-            // Loş maden lambaları: biri girişte, biri gümüş damarının üstünde (soğuk mavi parıltı)
-            AddLantern(zone, new Vector3(-10f, 3f, 84f), new Color(1f, 0.7f, 0.4f), 6f, 1.3f);
-            AddLantern(zone, new Vector3(0f, 2.6f, 100f), new Color(0.7f, 0.82f, 1f), 5f, 1.4f);
+            // Loş maden lambaları duvara monte: biri batı duvarında girişe yakın, biri kuzey duvarında gümüş damarının üstünde
+            AddWallLantern(zone, new Vector3(-12f, 2.6f, 84f), Vector3.right, new Color(1f, 0.7f, 0.4f), 6f, 1.3f);
+            AddWallLantern(zone, new Vector3(0f, 2.7f, 104f), Vector3.back, new Color(0.7f, 0.82f, 1f), 5f, 1.4f);
         }
 
         private static void Roof(Transform parent, Vector3 center, Vector3 size)
@@ -590,6 +592,26 @@ namespace Gumusdere.World
             GameObject roof = Shapes.Box("Maden_Cati", parent, center, size, Palette.CaveWall, false);
             var r = roof.GetComponent<Renderer>();
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+        }
+
+        /// <summary>
+        /// Duvara vidalı maden lambası: duvar plakası, duvardan çıkan demir kol, kısa zincir ve altında asılı fener.
+        /// wallPoint duvarın iç yüzeyi, normal duvardan odanın içine bakan yön (±X ya da ±Z).
+        /// </summary>
+        private static void AddWallLantern(Transform parent, Vector3 wallPoint, Vector3 normal, Color color, float range, float intensity)
+        {
+            bool alongX = Mathf.Abs(normal.x) > 0.5f;
+            Color iron = new(0.18f, 0.17f, 0.16f);
+            const float reach = 0.5f;
+
+            Shapes.Box("Lamba_Plaka", parent, wallPoint + normal * 0.03f + Vector3.up * 0.3f,
+                alongX ? new Vector3(0.06f, 0.42f, 0.26f) : new Vector3(0.26f, 0.42f, 0.06f), iron, false);
+            Shapes.Box("Lamba_Kolu", parent, wallPoint + normal * (reach * 0.5f) + Vector3.up * 0.45f,
+                alongX ? new Vector3(reach, 0.05f, 0.05f) : new Vector3(0.05f, 0.05f, reach), iron, false);
+            Shapes.Cylinder("Lamba_Zinciri", parent, wallPoint + normal * reach + Vector3.up * 0.36f,
+                new Vector3(0.025f, 0.09f, 0.025f), iron, false);
+
+            AddLantern(parent, wallPoint + normal * reach, color, range, intensity);
         }
 
         private static void AddLantern(Transform parent, Vector3 position, Color color, float range, float intensity = 2.2f)
