@@ -263,6 +263,56 @@ namespace Gumusdere.World
             Shapes.Cylinder("Saman", zone, new Vector3(-10f, 0.6f, 38f), new Vector3(1.2f, 0.6f, 1.2f), Palette.Hay, true, Quaternion.Euler(0f, 0f, 90f));
             Shapes.Cylinder("Saman", zone, new Vector3(16f, 0.6f, 33f), new Vector3(1.2f, 0.6f, 1.2f), Palette.Hay, true, Quaternion.Euler(90f, 0f, 0f));
             Shapes.Box("Yemlik", zone, new Vector3(-4f, 0.35f, 41f), new Vector3(2.4f, 0.7f, 0.8f), Palette.Wood);
+            BuildBarn(zone);
+        }
+
+        /// <summary>
+        /// Çoban Rıfat Amca'nın ahırı: çitle çevrili ağıl + arkada damlı bir ahır binası, batı tarafında kapı.
+        /// İnekler başıboş gezer; Cemal onları buraya toplar. Karşılığında kirişler ağılın kuzeyinde belirir.
+        /// </summary>
+        private void BuildBarn(Transform zone)
+        {
+            var root = new GameObject("Ahir").transform;
+            root.SetParent(zone, false);
+            const float x0 = 21f, x1 = 29f, z0 = 28f, z1 = 34f;
+
+            // Ahır binası (doğu kenarı)
+            Shapes.Box("Ahir_Bina", root, new Vector3(28f, 1.4f, 31f), new Vector3(2.2f, 2.8f, 6f), Palette.Roof);
+            Shapes.Box("Ahir_Cati", root, new Vector3(28f, 3.0f, 31f), new Vector3(2.8f, 0.4f, 6.6f), Palette.DarkWood, false);
+            Shapes.Box("Ahir_Kapisi", root, new Vector3(26.88f, 1.0f, 31f), new Vector3(0.06f, 2f, 1.8f), Palette.DarkWood, false);
+
+            // Ağıl çiti; batıda z 30..32.4 arası kapı boşluğu
+            Fence(root, new Vector3(x0, 0f, z0), new Vector3(26.9f, 0f, z0));
+            Fence(root, new Vector3(x0, 0f, z1), new Vector3(26.9f, 0f, z1));
+            Fence(root, new Vector3(x0, 0f, z0), new Vector3(x0, 0f, 30f));
+            Fence(root, new Vector3(x0, 0f, 32.4f), new Vector3(x0, 0f, z1));
+            Shapes.Box("Yemlik", root, new Vector3(25.5f, 0.35f, 33.2f), new Vector3(2f, 0.7f, 0.6f), Palette.Wood);
+            Shapes.Cylinder("Saman", root, new Vector3(23f, 0.5f, 28.9f), new Vector3(1f, 0.5f, 1f), Palette.Hay, true, Quaternion.Euler(0f, 0f, 90f));
+
+            layout.BarnPen = Rect.MinMaxRect(x0 + 1f, z0 + 1f, 26f, z1 - 1.2f);
+            layout.BarnGate = new Vector3(x0, 0f, 31.2f);
+            layout.FarmerSpot = new Vector3(19.6f, 0f, 29.4f);
+
+            var gate = new GameObject("Ahir_Kapisi_Gorev").transform;
+            gate.SetParent(root, false);
+            gate.position = layout.BarnGate;
+            layout.Herd = gate.gameObject.AddComponent<Gumusdere.Village.HerdCowsJob>();
+
+            // Ödül: destek kirişleri (inekler toplanınca görünür)
+            var pile = new GameObject("Kiris_Yigini").transform;
+            pile.SetParent(root, false);
+            pile.position = new Vector3(24f, 0f, 36.4f);
+            var pileBody = pile.gameObject.AddComponent<BoxCollider>();
+            pileBody.center = new Vector3(0f, 0.4f, 0f);
+            pileBody.size = new Vector3(2.8f, 0.8f, 1.2f);
+            for (int i = 0; i < 3; i++)
+            {
+                Shapes.Box("Kiris", pile, new Vector3(0f, 0.14f + (i == 2 ? 0.27f : 0f), (i == 2 ? 0f : (i - 0.5f) * 0.4f)),
+                    new Vector3(2.6f, 0.26f, 0.26f), Palette.Wood, false);
+            }
+            pile.gameObject.SetActive(false);
+            layout.BeamPile = pile;
+            layout.BeamPileStand = pile.position + new Vector3(0f, 0f, -1.4f);
         }
 
         // ------------------------------------------------------------------ Göl ve orman
@@ -357,7 +407,8 @@ namespace Gumusdere.World
             f.Add(MapFeature.At("Köy", 25f, -9f, 0f, 0f, none));
             f.Add(MapFeature.At("Bakkal", 17f, -3f, 3.6f, 2.6f, Palette.Roof));
             f.Add(MapFeature.At("İlan panosu", 4.5f, 2f, 2.4f, 0.8f, Palette.Wall));
-            f.Add(MapFeature.At("Tomruklar", 23f, 41f, 3f, 1.7f, Palette.Wood));
+            f.Add(MapFeature.At("Ahır", 25f, 31f, 8f, 6f, Palette.Dirt));
+            f.Add(MapFeature.At("", 28f, 31f, 2.2f, 6f, Palette.Roof));
             f.Add(MapFeature.At("Kiriş yeri", -6.5f, 69.6f, 3f, 1.2f, Palette.Dirt));
 
             // Mera
@@ -425,7 +476,8 @@ namespace Gumusdere.World
 
             // Fener
             Shapes.Cylinder("Fener_Direk", zone, new Vector3(-3.2f, 1.1f, 70.8f), new Vector3(0.15f, 1.1f, 0.15f), Palette.DarkWood);
-            Shapes.Sphere("Fener", zone, new Vector3(-3.2f, 2.35f, 70.8f), new Vector3(0.45f, 0.45f, 0.45f), Palette.Hay, false);
+            Shapes.Sphere("Fener", zone, new Vector3(-3.2f, 2.35f, 70.8f), new Vector3(0.45f, 0.45f, 0.45f),
+                Gumusdere.Ambience.Ambient.Hdr(new Color(1f, 0.8f, 0.45f), 3.5f), false);
             var lanternLight = new GameObject("Fener_Isik").AddComponent<Light>();
             lanternLight.transform.SetParent(zone, false);
             lanternLight.transform.localPosition = new Vector3(-3.2f, 2.4f, 70.4f);
@@ -439,25 +491,13 @@ namespace Gumusdere.World
         }
 
         /// <summary>
-        /// Destek kirişi görevi: ormanda (nehrin kuzeyi, doğu ormanı) bir tomruk yığını, madenin ağzında kirişlerin
+        /// Destek kirişi görevi: Rıfat Amca'nın ahırının önündeki kirişler ve madenin ağzında kirişlerin
         /// bırakılacağı yer. Cemal ikisi arasında gidip gelir.
         /// </summary>
         private void BuildBeamJob(Transform mineZone)
         {
-            // Tomruk yığını
-            var pile = new GameObject("Tomruk_Yigini").transform;
-            pile.SetParent(world, false);
-            pile.position = new Vector3(23f, 0f, 41f);
-            var pileBody = pile.gameObject.AddComponent<BoxCollider>();
-            pileBody.center = new Vector3(0f, 0.55f, 0f);
-            pileBody.size = new Vector3(3f, 1.1f, 1.7f);
-            Quaternion lying = Quaternion.Euler(0f, 0f, 90f);
-            Shapes.Cylinder("Tomruk", pile, new Vector3(0f, 0.3f, -0.55f), new Vector3(0.55f, 1.4f, 0.55f), Palette.Wood, false, lying);
-            Shapes.Cylinder("Tomruk", pile, new Vector3(0f, 0.3f, 0f), new Vector3(0.55f, 1.4f, 0.55f), Palette.DarkWood, false, lying);
-            Shapes.Cylinder("Tomruk", pile, new Vector3(0f, 0.3f, 0.55f), new Vector3(0.55f, 1.4f, 0.55f), Palette.Wood, false, lying);
-            Shapes.Cylinder("Tomruk", pile, new Vector3(0f, 0.78f, -0.28f), new Vector3(0.5f, 1.3f, 0.5f), Palette.DarkWood, false, lying);
-            Shapes.Cylinder("Tomruk", pile, new Vector3(0f, 0.78f, 0.28f), new Vector3(0.5f, 1.3f, 0.5f), Palette.Wood, false, lying);
-            layout.Woodpile = pile;
+            // Kirişler Rıfat Amca'nın ahırından gelir (BuildBarn).
+            Transform pile = layout.BeamPile;
 
             // Madenin ağzındaki kiriş yeri (kapının batısı)
             var stock = new GameObject("Kiris_Yeri").transform;
@@ -472,7 +512,7 @@ namespace Gumusdere.World
             }
 
             layout.Beams = stock.gameObject.AddComponent<Gumusdere.Mining.BeamHaulJob>();
-            layout.Beams.Initialize(pile, pile.position + new Vector3(0f, 0f, -1.6f), stock.position + new Vector3(0f, 0f, -1.4f), placed);
+            layout.Beams.Initialize(pile, layout.BeamPileStand, stock.position + new Vector3(0f, 0f, -1.4f), placed);
         }
 
         // ------------------------------------------------------------------ Maden içi (final)
@@ -535,14 +575,24 @@ namespace Gumusdere.World
             layout.Vein.Initialize(shell, treasure);
             layout.PlayerInteractables.Add(layout.Vein);
 
-            // Fenerler
-            AddLantern(zone, new Vector3(-10f, 3f, 84f), new Color(1f, 0.75f, 0.45f), 9f);
-            AddLantern(zone, new Vector3(10f, 3f, 84f), new Color(1f, 0.75f, 0.45f), 9f);
-            AddLantern(zone, new Vector3(-9f, 3f, 92f), new Color(1f, 0.75f, 0.45f), 8f);
-            AddLantern(zone, new Vector3(0f, 2.5f, 100f), new Color(0.75f, 0.85f, 1f), 7f);
+            // Çatı: madenin üstü kapalı. Kamerada görünmez (sadece gölge atar), ama güneşi keser;
+            // içerisi oyuncunun feneri, Cemal'in baret lambası ve iki loş maden lambasıyla aydınlanır (MineDarkness).
+            Roof(zone, new Vector3(0f, 4.3f, 92.5f), new Vector3(28f, 0.6f, 27f));
+            Roof(zone, new Vector3(0f, 4.3f, 76f), new Vector3(6f, 0.6f, 9f));
+
+            // Loş maden lambaları: biri girişte, biri gümüş damarının üstünde (soğuk mavi parıltı)
+            AddLantern(zone, new Vector3(-10f, 3f, 84f), new Color(1f, 0.7f, 0.4f), 6f, 1.3f);
+            AddLantern(zone, new Vector3(0f, 2.6f, 100f), new Color(0.7f, 0.82f, 1f), 5f, 1.4f);
         }
 
-        private static void AddLantern(Transform parent, Vector3 position, Color color, float range)
+        private static void Roof(Transform parent, Vector3 center, Vector3 size)
+        {
+            GameObject roof = Shapes.Box("Maden_Cati", parent, center, size, Palette.CaveWall, false);
+            var r = roof.GetComponent<Renderer>();
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+        }
+
+        private static void AddLantern(Transform parent, Vector3 position, Color color, float range, float intensity = 2.2f)
         {
             var light = new GameObject("Maden_Feneri").AddComponent<Light>();
             light.transform.SetParent(parent, false);
@@ -550,7 +600,9 @@ namespace Gumusdere.World
             light.type = LightType.Point;
             light.color = color;
             light.range = range;
-            light.intensity = 2.2f;
+            light.intensity = intensity;
+            Shapes.Sphere("Maden_Feneri_Cam", parent, position, Vector3.one * 0.35f, Gumusdere.Ambience.Ambient.Hdr(color, 3.5f), false);
+            Shapes.Box("Maden_Feneri_Kapak", parent, position + new Vector3(0f, 0.25f, 0f), new Vector3(0.3f, 0.08f, 0.3f), Palette.DarkWood, false);
         }
 
         // ------------------------------------------------------------------ Sınırlar
@@ -574,15 +626,24 @@ namespace Gumusdere.World
             Shapes.Box("Cati", parent, basePos + new Vector3(0f, size.y + 0.25f, 0f), new Vector3(size.x + 0.6f, 0.5f, size.z + 0.6f), roof, false);
             Shapes.Box("Cati_Ust", parent, basePos + new Vector3(0f, size.y + 0.75f, 0f), new Vector3(size.x * 0.7f, 0.5f, size.z * 0.6f), roof, false);
             Shapes.Box("Ev_Kapi", parent, basePos + new Vector3(0f, 0.9f, -size.z * 0.5f - 0.03f), new Vector3(1.2f, 1.8f, 0.06f), Palette.DarkWood, false);
-            Shapes.Box("Ev_Pencere", parent, basePos + new Vector3(size.x * 0.28f, size.y * 0.6f, -size.z * 0.5f - 0.03f), new Vector3(0.9f, 0.7f, 0.06f), Palette.ShallowWater, false);
+            // Akşamüstü içeride lamba yanıyor: pencere hafifçe parlar (bloom).
+            Shapes.Box("Ev_Pencere", parent, basePos + new Vector3(size.x * 0.28f, size.y * 0.6f, -size.z * 0.5f - 0.03f), new Vector3(0.9f, 0.7f, 0.06f),
+                Gumusdere.Ambience.Ambient.Hdr(new Color(1f, 0.78f, 0.42f), 1.8f), false);
+            Shapes.Box("Ev_Pencere_Cerceve", parent, basePos + new Vector3(size.x * 0.28f, size.y * 0.6f, -size.z * 0.5f - 0.02f), new Vector3(1.05f, 0.85f, 0.04f), Palette.DarkWood, false);
         }
 
         private static void Tree(Transform parent, Vector3 basePos, float size, bool lightLeaves = false)
         {
             Shapes.Cylinder("Agac_Govde", parent, basePos + new Vector3(0f, size, 0f), new Vector3(0.35f, 1f, 0.35f) * size, Palette.DarkWood);
             Color leaves = lightLeaves ? Palette.LeafLight : Palette.Leaf;
-            Shapes.Sphere("Agac_Yaprak", parent, basePos + new Vector3(0f, 2.7f * size, 0f), new Vector3(2.3f, 2.2f, 2.3f) * size, leaves, false);
-            Shapes.Sphere("Agac_Yaprak", parent, basePos + new Vector3(0.5f, 3.4f * size, 0.3f), new Vector3(1.5f, 1.4f, 1.5f) * size, leaves, false);
+
+            // Yapraklar gövdenin tepesindeki bir pivotun altında: rüzgârda o noktanın etrafında salınır.
+            var crown = new GameObject("Agac_Tepe").transform;
+            crown.SetParent(parent, false);
+            crown.localPosition = basePos + new Vector3(0f, 2f * size, 0f);
+            Shapes.Sphere("Agac_Yaprak", crown, new Vector3(0f, 0.7f * size, 0f), new Vector3(2.3f, 2.2f, 2.3f) * size, leaves, false);
+            Shapes.Sphere("Agac_Yaprak", crown, new Vector3(0.5f, 1.4f * size, 0.3f), new Vector3(1.5f, 1.4f, 1.5f) * size, leaves, false);
+            crown.gameObject.AddComponent<Gumusdere.Ambience.WindSway>().Initialize(1f / Mathf.Max(0.6f, size));
         }
 
         private static Gumusdere.Farming.BerryBush Bush(Transform parent, Vector3 basePos)

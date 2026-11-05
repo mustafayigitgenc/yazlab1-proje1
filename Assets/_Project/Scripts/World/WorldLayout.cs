@@ -52,9 +52,24 @@ namespace Gumusdere.World
         /// <summary>Köy ilan panosu (köylülerin istekleri).</summary>
         public Gumusdere.Village.QuestBoard QuestBoard;
 
-        /// <summary>Cemal'in kiriş taşıma görevi ve ormandaki tomruk yığını.</summary>
+        /// <summary>Cemal'in kiriş taşıma görevi; kirişler Rıfat Amca'nın ahırının önünde durur.</summary>
         public Gumusdere.Mining.BeamHaulJob Beams;
-        public Transform Woodpile;
+        public Transform BeamPile;
+        public Vector3 BeamPileStand;
+
+        /// <summary>Rıfat Amca'nın ahırı: inek toplama görevi, ağıl alanı, kapı ve çobanın yeri.</summary>
+        public Gumusdere.Village.HerdCowsJob Herd;
+        public Rect BarnPen;
+        public Vector3 BarnGate;
+        public Vector3 FarmerSpot;
+
+        /// <summary>Başıboş ineklerin dolaştığı bölgeler (her inek için bir tane).</summary>
+        public readonly List<Rect> LooseCowAreas = new()
+        {
+            new Rect(-17f, 33f, 7f, 5f),   // göl kıyısının güneydoğusu
+            new Rect(4f, 54f, 6f, 6f),     // böğürtlen çalılarının batısı
+            new Rect(-8f, 63f, 5f, 5f)     // maden yolunun batısı
+        };
 
         public Vector3 FishingSpot;
         public Gumusdere.Fishing.FishingSpot Fishing;

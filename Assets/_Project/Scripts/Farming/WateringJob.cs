@@ -135,7 +135,7 @@ namespace Gumusdere.Farming
 
         private static void SetCan(GameObject worker, bool visible)
         {
-            Transform can = worker.transform.Find(CanObjectName);
+            Transform can = worker.transform.FindDeep(CanObjectName);
             if (can != null) can.gameObject.SetActive(visible);
         }
     }

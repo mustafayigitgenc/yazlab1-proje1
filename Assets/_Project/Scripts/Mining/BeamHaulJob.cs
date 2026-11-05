@@ -7,8 +7,9 @@ using UnityEngine;
 namespace Gumusdere.Mining
 {
     /// <summary>
-    /// Cemal'in çok duraklı taşıma görevi: ormandaki tomruk yığınından bir kiriş omuzlar, madenin ağzına götürür,
-    /// eksik kiriş kalmayana kadar gidip gelir (her kiriş 2 durak: yığın → maden). Köprü kalkıksa yol sığ geçitten geçer.
+    /// Cemal'in çok duraklı taşıma görevi: Rıfat Amca'nın ahırının önündeki yığından bir kiriş omuzlar, madenin ağzına
+    /// götürür, eksik kiriş kalmayana kadar gidip gelir (her kiriş 2 durak: yığın → maden).
+    /// Kirişler, inekler ahıra toplanınca ortaya çıkar (Unlock).
     /// Hüsnü Dayı 3 kiriş yerine konmadan maden kapısını açmaz (MineEntryRule).
     /// </summary>
     public sealed class BeamHaulJob : MonoBehaviour, IMultiStepTask
@@ -28,6 +29,15 @@ namespace Gumusdere.Mining
         public int Delivered { get; private set; }
         public bool IsComplete => Delivered >= MineEntryRule.RequiredBeams;
 
+        /// <summary>Rıfat Amca kirişleri verdi mi?</summary>
+        public bool Unlocked { get; private set; }
+
+        public void Unlock()
+        {
+            Unlocked = true;
+            if (pile != null) pile.gameObject.SetActive(true);
+        }
+
         /// <summary>Bir kiriş madenin ağzına bırakıldı (toplam).</summary>
         public event Action<int> BeamDelivered;
 
@@ -38,7 +48,7 @@ namespace Gumusdere.Mining
         public Vector3 InteractionPoint => AtPile ? pileStand : stockStand;
         public Transform Root => AtPile ? pile : transform;
         public Vector3 LookPoint => AtPile ? pile.position + Vector3.up * 0.5f : stockLook;
-        public bool IsAvailable => running || !IsComplete;
+        public bool IsAvailable => running || (Unlocked && !IsComplete);
         public bool HasNextStep => stepIndex + 1 < route.Count;
 
         /// <param name="woodpile">Tomruk yığını (çarpışmalı; sensör onu görmeli).</param>
@@ -66,7 +76,7 @@ namespace Gumusdere.Mining
                 route.Add(true);
                 route.Add(false);
             }
-            worker.GetComponent<ISpeaker>()?.Say("Tomruk yığınına gidiyorum ağam, kirişleri madenin ağzına taşıyacağım!");
+            worker.GetComponent<ISpeaker>()?.Say("Rıfat Amca'nın kirişlerini madenin ağzına taşıyorum ağam!");
         }
 
         public void Interact(GameObject worker)
@@ -100,7 +110,7 @@ namespace Gumusdere.Mining
 
         private static void SetCarried(GameObject worker, bool visible)
         {
-            Transform beam = worker.transform.Find(CarriedBeamName);
+            Transform beam = worker.transform.FindDeep(CarriedBeamName);
             if (beam != null) beam.gameObject.SetActive(visible);
         }
 

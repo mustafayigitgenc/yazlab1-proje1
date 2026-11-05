@@ -1,3 +1,4 @@
+using Gumusdere.Core;
 using Gumusdere.Items;
 using UnityEngine;
 
@@ -21,9 +22,9 @@ namespace Gumusdere.Player
         public void Initialize(IInventory playerInventory)
         {
             inventory = playerInventory;
-            helmet = transform.Find(HelmetName)?.gameObject;
-            lantern = transform.Find(LanternName)?.gameObject;
-            hat = transform.Find(HatName)?.gameObject;
+            helmet = transform.FindDeep(HelmetName)?.gameObject;
+            lantern = transform.FindDeep(LanternName)?.gameObject;
+            hat = transform.FindDeep(HatName)?.gameObject;
             inventory.Changed += (type, count) => Refresh();
             Refresh();
         }
