@@ -25,6 +25,9 @@ namespace Gumusdere.Mining
         /// <summary>Damar tamamen açıldığında.</summary>
         public event Action Mined;
 
+        /// <summary>Her kazma vuruşunda (ses ve efekt için).</summary>
+        public event Action Hit;
+
         public void Initialize(Transform rockShell, GameObject silverInside)
         {
             shell = rockShell;
@@ -43,6 +46,7 @@ namespace Gumusdere.Mining
             if (IsMined || Time.time < nextHitTime) return;
             nextHitTime = Time.time + HitCooldown;
             hits++;
+            Hit?.Invoke();
             StartCoroutine(Shake());
 
             if (hits < HitsNeeded)

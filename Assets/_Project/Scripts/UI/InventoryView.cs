@@ -23,7 +23,7 @@ namespace Gumusdere.UI
 
         private void OnGUI()
         {
-            if (inventory == null) return;
+            if (inventory == null || !Gumusdere.Core.Hud.Visible) return;
             EnsureStyles();
 
             float scale = Mathf.Max(1f, Screen.height / 900f);

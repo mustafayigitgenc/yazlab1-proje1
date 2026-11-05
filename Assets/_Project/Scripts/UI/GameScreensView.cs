@@ -12,7 +12,7 @@ namespace Gumusdere.UI
 
         private GameFlow flow;
         private Texture2D white;
-        private GUIStyle titleStyle, textStyle, buttonStyle, smallStyle;
+        private GUIStyle titleStyle, textStyle, buttonStyle, smallStyle, logoStyle, subtitleStyle, hintStyle, footerStyle;
 
         public void Initialize(GameFlow gameFlow)
         {
@@ -38,26 +38,53 @@ namespace Gumusdere.UI
 
         private void DrawTitle(float w, float h)
         {
-            Fill(new Rect(0f, 0f, w, h), new Color(0.05f, 0.04f, 0.03f, 0.72f));
-            Rect panel = Centered(w, h, PanelWidth, 440f);
+            // Sol tarafta yarı saydam panel; sağda kamera köyün üstünde döner (CameraFollow.SetShowcase).
+            const float panelWidth = 600f;
+            for (int i = 0; i < 24; i++)
+            {
+                float a = Mathf.Lerp(0.82f, 0f, i / 23f);
+                Fill(new Rect(i * (panelWidth + 260f) / 24f, 0f, (panelWidth + 260f) / 24f + 1f, h), new Color(0.05f, 0.035f, 0.02f, a));
+            }
 
-            GUILayout.BeginArea(panel);
-            GUILayout.Label("Gümüşdere", titleStyle);
-            GUILayout.Space(8f);
+            var area = new Rect(56f, Mathf.Max(30f, (h - 700f) * 0.5f), panelWidth - 40f, 700f);
+            GUILayout.BeginArea(area);
+
+            // Logo: gölgeli büyük başlık + ince gümüş çizgi + alt başlık
+            Rect logo = GUILayoutUtility.GetRect(area.width, 86f);
+            Shadowed(logo, "GÜMÜŞDERE", logoStyle, new Color(0f, 0f, 0f, 0.65f), 3f);
+            Rect line = GUILayoutUtility.GetRect(area.width, 10f);
+            Fill(new Rect(line.x, line.y + 4f, 330f, 2f), new Color(0.85f, 0.88f, 0.92f, 0.9f));
+            Fill(new Rect(line.x + 335f, line.y + 3f, 4f, 4f), new Color(1f, 0.8f, 0.45f, 1f));
+            GUILayout.Label("Bir dağ köyünün yeniden doğuşu", subtitleStyle);
+            GUILayout.Space(18f);
+
             GUILayout.Label(
                 "Dedenden kalan dağ köyü Gümüşdere'yi devraldın. Köy eskiden gümüş madeniyle geçinirdi, " +
-                "ama yirmi yıl önceki göçükten beri maden kapalı. Madeni yeniden açıp köyü canlandırmak istiyorsun.\n\n" +
-                "Yanında işçin Cemal var. Nehrin karşısına geç, tarlanla ve oltanla hazırlan, " +
-                "sonra maden kapısının anahtarını tutan Hüsnü Dayı'yı ikna et.", textStyle);
-            GUILayout.Space(14f);
+                "ama yirmi yıl önceki göçükten beri maden kapalı.\n\n" +
+                "Yanında işçin <b>Cemal</b> var: köprüyü indirir, tarlayı sular, kiriş taşır, göçüğü temizler. " +
+                "Tarlanla, oltanla ve köylülerin istekleriyle para kazan, bakkal <b>Nazmi</b>'den baret ve fener al, " +
+                "sonra maden kapısının anahtarını tutan <b>Hüsnü Dayı</b>'yı ikna et.", textStyle);
+            GUILayout.Space(16f);
             GUILayout.Label(
                 "<b>WASD</b> yürü   <b>Shift</b> koş   <b>E</b> kullan / konuş   <b>F</b> Cemal'e görev ver\n" +
-                "<b>G</b> Cemal bekle / takip   <b>Boşluk</b> oltayı çek   <b>Esc</b> menü   <b>F1</b> debug", smallStyle);
-            GUILayout.Space(22f);
-            if (GUILayout.Button("Başla  (Enter)", buttonStyle, GUILayout.Height(46f))) flow.StartGame();
+                "<b>G</b> bekle / takip   <b>M</b> harita   <b>Boşluk</b> oltayı çek   <b>Esc</b> menü", hintStyle);
+            GUILayout.Space(24f);
+            if (GUILayout.Button("Başla  (Enter)", buttonStyle, GUILayout.Height(48f), GUILayout.Width(330f))) flow.StartGame();
             GUILayout.Space(6f);
-            if (GUILayout.Button("Çık", buttonStyle, GUILayout.Height(38f))) flow.Quit();
+            if (GUILayout.Button("Çık", buttonStyle, GUILayout.Height(38f), GUILayout.Width(330f))) flow.Quit();
             GUILayout.EndArea();
+
+            GUI.Label(new Rect(56f, h - 40f, panelWidth, 24f),
+                "Kocaeli Üniversitesi · YazLab I · Proje 1   —   Mustafa Yiğit Genç · İbrahim Akkuş", footerStyle);
+        }
+
+        private static void Shadowed(Rect r, string text, GUIStyle style, Color shadow, float offset)
+        {
+            Color old = style.normal.textColor;
+            style.normal.textColor = shadow;
+            GUI.Label(new Rect(r.x + offset, r.y + offset, r.width, r.height), text, style);
+            style.normal.textColor = old;
+            GUI.Label(r, text, style);
         }
 
         private void DrawPause(float w, float h)
@@ -132,6 +159,15 @@ namespace Gumusdere.UI
             smallStyle.normal.textColor = new Color(0.85f, 0.85f, 0.85f);
 
             buttonStyle = new GUIStyle(GUI.skin.button) { fontSize = 18 };
+
+            logoStyle = new GUIStyle(GUI.skin.label) { fontSize = 68, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft };
+            logoStyle.normal.textColor = new Color(0.93f, 0.95f, 0.98f);
+            subtitleStyle = new GUIStyle(GUI.skin.label) { fontSize = 20, fontStyle = FontStyle.Italic };
+            subtitleStyle.normal.textColor = new Color(1f, 0.84f, 0.55f);
+            hintStyle = new GUIStyle(GUI.skin.label) { fontSize = 15, wordWrap = true, richText = true };
+            hintStyle.normal.textColor = new Color(0.85f, 0.85f, 0.85f);
+            footerStyle = new GUIStyle(GUI.skin.label) { fontSize = 13 };
+            footerStyle.normal.textColor = new Color(0.8f, 0.78f, 0.72f);
         }
     }
 }

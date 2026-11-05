@@ -9,7 +9,7 @@ namespace Gumusdere.Core
         public TitleState(GameFlow flow) => this.flow = flow;
 
         public string Name => "Başlangıç";
-        public void Enter() { Time.timeScale = 1f; flow.SetControls(false); }
+        public void Enter() { Time.timeScale = 1f; flow.SetControls(false); Hud.Visible = false; }
         public void Tick(float deltaTime) { }
         public void Exit() { }
     }
@@ -21,7 +21,7 @@ namespace Gumusdere.Core
         public PlayingState(GameFlow flow) => this.flow = flow;
 
         public string Name => "Oynanıyor";
-        public void Enter() { Time.timeScale = 1f; flow.SetControls(true); }
+        public void Enter() { Time.timeScale = 1f; flow.SetControls(true); Hud.Visible = true; }
         public void Tick(float deltaTime) { }
         public void Exit() { }
     }

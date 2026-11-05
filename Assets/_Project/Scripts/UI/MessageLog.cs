@@ -45,7 +45,7 @@ namespace Gumusdere.UI
 
         private void OnGUI()
         {
-            if (entries.Count == 0 || !Visible) return;
+            if (entries.Count == 0 || !Visible || !Gumusdere.Core.Hud.Visible) return;
             EnsureStyles();
 
             float scale = Mathf.Max(1f, Screen.height / 900f);
