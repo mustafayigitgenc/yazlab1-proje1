@@ -105,6 +105,10 @@ namespace Gumusdere.Testing
             float previousScale = Time.timeScale;
             Time.timeScale = SpeedUp;
 
+            // Test, Cemal'in yol bulmasını ölçer: can yeleği varmış gibi (sığ geçit açık) yapılır, sonda eski hâline döner.
+            bool hadLifeVest = companion.HasLifeVest;
+            companion.SetLifeVest(true);
+
             companion.TaskSucceeded += OnTaskSucceeded;
             companion.TaskFailed += OnTaskFailed;
             var rng = new System.Random(Seed);
@@ -169,6 +173,7 @@ namespace Gumusdere.Testing
                           $"{current.Seconds:0.0} sn, yol {current.PathLength:0} m, yeniden yol {current.Repaths}, geçit {current.CrossedFord} {current.Reason}");
             }
 
+            companion.SetLifeVest(hadLifeVest);
             companion.TaskSucceeded -= OnTaskSucceeded;
             companion.TaskFailed -= OnTaskFailed;
             Time.timeScale = previousScale <= 0f ? 1f : previousScale;

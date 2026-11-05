@@ -87,6 +87,14 @@ namespace Gumusdere.Companion
         {
             if (target == null || !target.IsAvailable || IsBusy) return false;
 
+            // Can yeleği yoksa sığ geçit Cemal için yürünemez: hedefe sadece geçitten gidiliyorsa görevi reddeder.
+            if (!HasLifeVest && NeedsWading(target.InteractionPoint))
+            {
+                Speaker?.Say("Ağam, karşıya ancak sığ geçitten geçilir ama can yeleğim yok, akıntıda boğulurum! Nazmi'nin bakkalından bir can yeleği alır mısın?");
+                LifeVestNeeded?.Invoke();
+                return false;
+            }
+
             CurrentTask = target;
             taskStartTime = Time.time;
             if (target is IMultiStepTask multiStep)
@@ -99,6 +107,36 @@ namespace Gumusdere.Companion
             }
             Brain.ChangeState(GoToTargetState);
             return true;
+        }
+
+        // ------------------------------------------------------------ Can yeleği
+
+        public const string LifeVestObjectName = "Can_Yelegi";
+
+        /// <summary>Can yeleği giyiyor mu? Giymiyorsa NavMeshAgent'in alan maskesinden ShallowWater çıkarılır.</summary>
+        public bool HasLifeVest { get; private set; }
+
+        /// <summary>Oyuncu, can yeleği olmadığı için Cemal'in reddettiği bir görev verdi.</summary>
+        public event Action LifeVestNeeded;
+
+        public void SetLifeVest(bool wearing)
+        {
+            HasLifeVest = wearing;
+            int dryLand = NavMesh.AllAreas & ~NavAreas.MaskOf(NavAreas.ShallowWater);
+            if (Agent != null) Agent.areaMask = wearing ? NavMesh.AllAreas : dryLand;
+            Transform vest = transform.FindDeep(LifeVestObjectName);
+            if (vest != null) vest.gameObject.SetActive(wearing);
+        }
+
+        /// <summary>Hedefe kuru yoldan gidilemiyor ama sığ geçitten gidilebiliyor mu?</summary>
+        private bool NeedsWading(Vector3 point)
+        {
+            if (!NavMesh.SamplePosition(point, out NavMeshHit hit, 2f, NavMesh.AllAreas)) return false;
+            var path = new NavMeshPath();
+            int dryLand = NavMesh.AllAreas & ~NavAreas.MaskOf(NavAreas.ShallowWater);
+            if (NavMesh.CalculatePath(transform.position, hit.position, dryLand, path) && path.status == NavMeshPathStatus.PathComplete)
+                return false;
+            return NavMesh.CalculatePath(transform.position, hit.position, NavMesh.AllAreas, path) && path.status == NavMeshPathStatus.PathComplete;
         }
 
         public void Recall()

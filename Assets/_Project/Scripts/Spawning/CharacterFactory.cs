@@ -49,12 +49,13 @@ namespace Gumusdere.Spawning
             lantern.SetParent(t, false);
             lantern.localPosition = new Vector3(-0.45f, 0.75f, 0.15f);
             Shapes.Box("Fener_Govde", lantern, Vector3.zero, new Vector3(0.16f, 0.22f, 0.16f), Palette.DarkWood, false);
-            Shapes.Sphere("Fener_Isik", lantern, new Vector3(0f, 0.01f, 0f), Vector3.one * 0.13f, Palette.Hay, false);
+            Shapes.Sphere("Fener_Isik", lantern, new Vector3(0f, 0.01f, 0f), Vector3.one * 0.13f,
+                Gumusdere.Ambience.Ambient.Hdr(new Color(1f, 0.85f, 0.5f), 4f), false);
             var glow = new GameObject("Fener_Lamba").AddComponent<Light>();
             glow.transform.SetParent(lantern, false);
             glow.type = LightType.Point;
-            glow.range = 7f;
-            glow.intensity = 2.2f;
+            glow.range = 10f;
+            glow.intensity = 3.2f;
             glow.color = new Color(1f, 0.82f, 0.5f);
             glow.shadows = LightShadows.None;
             lantern.gameObject.SetActive(false);
@@ -95,6 +96,27 @@ namespace Gumusdere.Spawning
                 Quaternion.Euler(60f, 0f, 0f));
             Shapes.Box("Kova_Sap", can, new Vector3(0f, 0.3f, 0f), new Vector3(0.04f, 0.04f, 0.3f), Palette.Stone, false);
             can.gameObject.SetActive(false);
+
+            // Baret lambası: sadece madenin karanlığında yanar (MineDarkness açar).
+            var headLamp = new GameObject(HeadLampName).AddComponent<Light>();
+            headLamp.transform.SetParent(t, false);
+            headLamp.transform.localPosition = new Vector3(0f, 1.8f, 0.3f);
+            headLamp.type = LightType.Point;
+            headLamp.range = 6f;
+            headLamp.intensity = 1.6f;
+            headLamp.color = new Color(1f, 0.9f, 0.7f);
+            headLamp.shadows = LightShadows.None;
+            headLamp.gameObject.SetActive(false);
+
+            // Can yeleği: bakkaldan alınınca görünür (CompanionController.SetLifeVest).
+            var vest = new GameObject(CompanionController.LifeVestObjectName).transform;
+            vest.SetParent(t, false);
+            Color vestColor = new(1f, 0.42f, 0.08f);
+            Shapes.Box("Yelek", vest, new Vector3(0f, 0.85f, 0f), new Vector3(0.82f, 0.55f, 0.72f), vestColor, false);
+            Shapes.Box("Yelek_Serit", vest, new Vector3(0f, 0.95f, 0f), new Vector3(0.84f, 0.06f, 0.74f), Palette.Wall, false);
+            Shapes.Box("Yelek_Serit", vest, new Vector3(0f, 0.75f, 0f), new Vector3(0.84f, 0.06f, 0.74f), Palette.Wall, false);
+            Shapes.Box("Yelek_Yaka", vest, new Vector3(0f, 1.17f, 0f), new Vector3(0.5f, 0.12f, 0.45f), vestColor, false);
+            vest.gameObject.SetActive(false);
 
             // Omuzdaki destek kirişi: sadece kiriş taşıma görevinde görünür (BeamHaulJob açıp kapatır).
             var beam = new GameObject(Gumusdere.Mining.BeamHaulJob.CarriedBeamName).transform;
@@ -154,6 +176,25 @@ namespace Gumusdere.Spawning
             body.center = new Vector3(0f, 0.9f, 0f);
             body.radius = 0.4f;
             body.height = 1.8f;
+            return root;
+        }
+
+        public const string HeadLampName = "Baret_Lambasi";
+
+        /// <summary>Çoban Rıfat Amca: Nazmi'yle aynı kalıp, yeşil yelek ve hasır şapka.</summary>
+        public static GameObject CreateFarmerBody(Transform parent, Vector3 position, float facingY)
+        {
+            GameObject root = CreateShopkeeperBody(parent, position, facingY);
+            root.name = "Coban_Rifat";
+            foreach (Renderer r in root.GetComponentsInChildren<Renderer>())
+            {
+                if (r.name == "Govde") r.sharedMaterial = MaterialLibrary.Get(new Color(0.35f, 0.5f, 0.25f));
+                else if (r.name == "Onluk") r.sharedMaterial = MaterialLibrary.Get(Palette.Trousers);
+                else if (r.name.StartsWith("Kasket")) r.sharedMaterial = MaterialLibrary.Get(Palette.Hay);
+                else if (r.name == "Biyik") r.sharedMaterial = MaterialLibrary.Get(new Color(0.85f, 0.85f, 0.82f));
+            }
+            Shapes.Cylinder("Sapka_Kenar", root.transform, new Vector3(0f, 1.72f, 0f), new Vector3(0.7f, 0.03f, 0.7f), Palette.Hay, false);
+            Shapes.Cylinder("Asa", root.transform, new Vector3(0.45f, 0.8f, 0.2f), new Vector3(0.06f, 0.8f, 0.06f), Palette.DarkWood, false);
             return root;
         }
 

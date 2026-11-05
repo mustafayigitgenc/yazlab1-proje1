@@ -26,12 +26,13 @@ namespace Gumusdere.Economy
 
         private static readonly Dictionary<ItemType, int> BuyPrices = new()
         {
+            [ItemType.LifeVest] = 30,
             [ItemType.Helmet] = 80,
             [ItemType.Lantern] = 60
         };
 
         /// <summary>Bakkalda satılan ekipman (sırayla).</summary>
-        public static readonly IReadOnlyList<ItemType> ForSale = new[] { ItemType.Helmet, ItemType.Lantern };
+        public static readonly IReadOnlyList<ItemType> ForSale = new[] { ItemType.LifeVest, ItemType.Helmet, ItemType.Lantern };
 
         /// <summary>Satış fiyatı; satılamıyorsa 0.</summary>
         public static int SellPrice(ItemType type) => SellPrices.TryGetValue(type, out int p) ? p : 0;

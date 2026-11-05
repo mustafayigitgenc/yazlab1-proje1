@@ -98,6 +98,7 @@ namespace Gumusdere.UI
             }
 
             GUILayout.Space(8f);
+            GUILayout.Label("Can yeleği Cemal için: onsuz sığ geçide girmez.", SmallStyle);
             GUILayout.Label("Hüsnü Dayı, baret ve fener olmadan kimseyi madene sokmaz.", SmallStyle);
             GUILayout.Label("Daha çok para için köy meydanındaki ilan panosuna bak.", SmallStyle);
             GUILayout.EndVertical();
@@ -112,7 +113,13 @@ namespace Gumusdere.UI
         {
             if (!shop.TryBuy(type, out lastMessage)) return;
             log?.Add("", lastMessage, Color.white);
-            shopkeeper?.Say(type == ItemType.Helmet ? "Sağlam baret, başına taş düşse bir şey olmaz!" : "Bu fener madenin en dibini aydınlatır.");
+            shopkeeper?.Say(type switch
+            {
+                ItemType.Helmet => "Sağlam baret, başına taş düşse bir şey olmaz!",
+                ItemType.Lantern => "Bu fener madenin en dibini aydınlatır.",
+                ItemType.LifeVest => "Cemal'e yakışır! Artık akıntıdan korkmaz.",
+                _ => "Güle güle kullan ağa!"
+            });
         }
     }
 }
