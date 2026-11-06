@@ -106,7 +106,7 @@ Diyalog sonucunda kapı açılır; oyuncu madene girer, Cemal göçüğü temizl
    ollama list
    ```
 
-Ayarlar `Assets/StreamingAssets/ollama_config.json` dosyasındadır (build'de `Gumusdere_Data/StreamingAssets/` altında):
+Ayarlar `Assets/StreamingAssets/ollama_config.json` dosyasındadır (Windows build alınırsa `Gumusdere_Data/StreamingAssets/` altına kopyalanır):
 
 ```json
 {
@@ -123,20 +123,19 @@ Ayarlar `Assets/StreamingAssets/ollama_config.json` dosyasındadır (build'de `G
 
 Dosya yoksa veya bozuksa oyun aynı varsayılan değerlerle çalışır. Başka bir model denemek için sadece `model` alanını değiştirmek yeterlidir.
 
-### 2.2 Hazır build ile oynamak
-
-`Build/Gumusdere.exe` dosyasını çalıştırın. Ollama kapalıysa oyun yine açılır; sağ üstteki gösterge "Ollama kapalı" der,
-Hüsnü Dayı'ya yazılan mesajlar için "Ollama'ya ulaşılamıyor" uyarısı çıkar ve oyun çökmeden devam eder.
-
-### 2.3 Unity'de açmak
+### 2.2 Unity'de açıp oynamak
 
 1. Unity Hub → **Add project from disk** → bu klasör. Sürüm: **6000.6.7f1**.
 2. `Assets/Scenes/SampleScene` sahnesini açıp **Play**'e basın.
 
+Ollama kapalıysa oyun yine açılır; sağ üstteki gösterge "Ollama kapalı" der, Hüsnü Dayı'ya yazılan mesajlar için
+"Ollama'ya ulaşılamıyor" uyarısı çıkar ve oyun çökmeden devam eder. İstenirse **File → Build Profiles → Windows** ile
+tek başına çalışan bir sürüm de alınabilir; proje buna ek bir ayar gerektirmez.
+
 Sahne neredeyse boştur: **bütün dünya, karakterler, arayüz ve NavMesh kodla kurulur** (`GameBootstrap`). Bu sayede
 sahne dosyası birleştirme (merge) çakışması çıkarmaz ve her şey kodda izlenebilir.
 
-### 2.4 Testleri çalıştırmak
+### 2.3 Testleri çalıştırmak
 
 - **Birim testleri:** Window → General → Test Runner → EditMode → Run All.
 - **Ajan testi:** Oyunda F9 (köprü kalkıkken). Sonuç: `TestResults/agent_test_*.csv` ve `.md`.
@@ -726,7 +725,7 @@ Ham sonuçlar: [`TestResults/`](TestResults/) (her koşunun CSV'si ve özeti).
 | Diyalog testi, birim testleri | Bakkal ve para sistemi, ortak pencere sınıfı |
 | İlan panosu, madene giriş kuralı, sesler, başlık ekranı | Ajan testi, ışık ve görsel efektler, yürüme animasyonu |
 | Hikâye modu (bölüm yazıları) | Karakter modelleri, olta animasyonu, kazma |
-| README ve diyagramlar | Ekran görüntüleri ve Windows build |
+| README ve diyagramlar | Ekran görüntüleri |
 
 Commit geçmişi iki üye arasında dengelidir (`git shortlog -sn`).
 
